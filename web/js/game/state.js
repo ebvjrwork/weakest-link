@@ -18,7 +18,7 @@ export function setPendingJoinCode(c) { pendingJoinCode = c; }
 export const HOST = { conn: null, roomCode: '', state: null, error: null, connLost: false };
 
 export const CTRL = {
-  conn: null, roomCode: '', state: null, error: null, connLost: false, questionBankCache: null,
+  conn: null, roomCode: '', state: null, error: null, connLost: false,
 };
 
 export const P = {
@@ -33,7 +33,6 @@ export const ctrlUI = {
   questionsDraft: '',
   csvParsedQuestions: null,
   csvFileName: null,
-  showQuestionBank: false,
   linkCopied: false,
 };
 

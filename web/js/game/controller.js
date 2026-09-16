@@ -34,7 +34,6 @@ export function connectController(code, key) {
   conn.on('open', () => { CTRL.connLost = false; render(); });
   conn.on('data', (msg) => {
     if (msg.type === 'controllerState') { CTRL.state = msg.state; CTRL.connLost = false; }
-    else if (msg.type === 'questionBankData') { CTRL.questionBankCache = msg.questions; }
     else if (msg.type === 'roomClosed') {
       CTRL.error = 'The host closed this room.';
       conn.close(); // definitive — stop net.js's auto-reconnect against a room that's now gone
@@ -73,7 +72,6 @@ Actions.ctrlRetry = () => {
   CTRL.state = null;
   CTRL.error = null;
   CTRL.connLost = false;
-  CTRL.questionBankCache = null;
   render();
 };
 
@@ -149,12 +147,6 @@ Actions.ctrlUseCsvQuestions = () => {
 Actions.ctrlClearCsvPreview = () => {
   ctrlUI.csvParsedQuestions = null;
   ctrlUI.csvFileName = null;
-  render();
-};
-
-Actions.ctrlToggleQuestionBank = () => {
-  ctrlUI.showQuestionBank = !ctrlUI.showQuestionBank;
-  if (ctrlUI.showQuestionBank) sendControl('requestQuestionBank');
   render();
 };
 
@@ -299,17 +291,11 @@ function controllerQuestionBankPanel(s) {
   const statusLine = s.usingCustom
     ? `<span style="color:var(--gold);">Using ${s.questionBankCount} custom question${s.questionBankCount === 1 ? '' : 's'}</span>`
     : `<span style="color:var(--muted);">Using the ${s.questionBankCount} built-in questions</span>`;
-  const bankList = ctrlUI.showQuestionBank
-    ? `<div class="qbank-list">${(CTRL.questionBankCache || []).map((item, i) => `
-        <div class="qbank-row"><span class="qbank-num">${i + 1}.</span><div><div class="qbank-q">${esc(item.q)}</div><div class="qbank-a">${esc(item.a)}</div></div></div>
-      `).join('')}</div>`
-    : '';
   const preview = ctrlUI.csvParsedQuestions ? { questions: ctrlUI.csvParsedQuestions, fileName: ctrlUI.csvFileName } : null;
   return `
     <div class="panel" style="text-align:left;">
       <h3>Question bank</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 10px;">${statusLine} &middot; <button class="back-link" style="display:inline;padding:0;font-size:13px;color:var(--blue);" data-action="ctrlToggleQuestionBank">${ctrlUI.showQuestionBank ? 'Hide list' : 'View all questions'}</button></p>
-      ${bankList}
+      <p style="font-size:13px;color:var(--muted);margin:0 0 10px;">${statusLine}</p>
       <p style="font-size:12px;color:var(--muted);margin:14px 0 6px;">Paste your own, one per line: <code style="color:var(--text);">Question text | Answer text</code></p>
       ${questionBankEditorHtml('ctrl', ctrlUI.questionsDraft, preview)}
       <div class="action-row" style="justify-content:flex-start;margin-top:10px;">

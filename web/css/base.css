@@ -125,7 +125,8 @@ input,select,textarea{font-family:'Inter',sans-serif;}
 .qbank-num{color:var(--muted);min-width:28px;}
 .qbank-q{color:var(--text);}
 .qbank-a{color:var(--green);font-size:12px;margin-top:2px;}
-.qbank-editor textarea{min-height:120px;font-size:14px;resize:vertical;}
+.qbank-editor textarea{min-height:120px;font-size:14px;resize:vertical;width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);}
+.qbank-editor textarea:focus{outline:2px solid var(--blue);}
 .qbank-editor .file-row{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;color:var(--muted);}
 .qbank-preview{background:var(--panel-2);border:1px solid var(--gold-dim);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px;}
 .qbank-preview .btns{display:flex;gap:8px;margin-top:8px;}
