@@ -55,6 +55,13 @@ a.stat-chip:hover{border-color:var(--gold-dim);color:var(--gold);}
 
 /* --- one-shot polish animations, triggered from host.js on state deltas --- */
 
+/* The winner screen's bank total keeps the amount/label text but drops the
+   boxed-panel look (background/padding/border-radius) that .bank-total
+   carries everywhere else — just a plain heading here, not another "bar"
+   competing with the winner name above it. Scoped to .host-wrap so it
+   doesn't touch the in-game bank display or the player's own gameover view. */
+.host-wrap .gameover .bank-total{background:none;padding:0;border-radius:0;}
+
 .bank-total.pulse{animation:bankPulse .5s ease;}
 @keyframes bankPulse{
   0%{transform:scale(1);}
