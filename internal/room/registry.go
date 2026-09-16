@@ -23,7 +23,10 @@ func NewManager(ctx context.Context) *Manager {
 // actor goroutine. communityBank is the server's shared bank snapshot at
 // creation time (used as the "reset to default" target); bank is what's
 // actually active to start (equal to communityBank unless usingCustom).
-func (m *Manager) Create(roundDuration int, communityBank, bank []Question, usingCustom bool) *Room {
+// The returned controllerKey must be handed to the room's creator directly
+// (the REST response) and never rebroadcast — it's the only thing that can
+// distinguish "knows the room code" (every player) from "is the quizmaster."
+func (m *Manager) Create(roundDuration int, communityBank, bank []Question, usingCustom bool) (*Room, string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	var code string
@@ -33,11 +36,12 @@ func (m *Manager) Create(roundDuration int, communityBank, bank []Question, usin
 			break
 		}
 	}
-	st := NewState(code, roundDuration, communityBank, bank, usingCustom)
+	controllerKey := NewID()
+	st := NewState(code, controllerKey, roundDuration, communityBank, bank, usingCustom)
 	rm := NewRoom(code, st)
 	m.rooms[code] = rm
 	go rm.Run(m.ctx, m.remove)
-	return rm
+	return rm, controllerKey
 }
 
 // Get looks up a room by its 4-letter code (case-insensitive).

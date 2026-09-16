@@ -146,7 +146,7 @@ function init() {
   if (runCode) {
     const clean = runCode.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
     if (clean) {
-      connectController(clean);
+      connectController(clean, getQueryParam('key') || '');
       return;
     }
   }

@@ -50,10 +50,14 @@ export function buildInviteLink(code) {
 // Same idea as buildInviteLink, but opens straight into the quizmaster
 // controller (auto-connected, no setup form) — used by the host's lobby
 // screen so the same person can run both the big screen and the controller.
-export function buildControllerLink(code) {
+// `key` is the room's separate controller secret (never the same as the
+// public room code) — without it, anyone who can join the game could also
+// open the controller and see answers / mark scores.
+export function buildControllerLink(code, key) {
   try {
-    return window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + '?run=' + code;
+    const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+    return `${base}?run=${code}&key=${encodeURIComponent(key)}`;
   } catch (e) {
-    return '?run=' + code;
+    return `?run=${code}&key=${encodeURIComponent(key)}`;
   }
 }

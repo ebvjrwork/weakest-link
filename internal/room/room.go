@@ -2,6 +2,7 @@ package room
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"time"
 
@@ -215,6 +216,14 @@ func (r *Room) handleAttach(req attachRequest) bool {
 		req.conn.SendJSON(ws.Msg(ws.ServerMsgState, "state", r.state.ToPlayerState(p.ID)))
 		return reconnected
 	case ws.RoleController:
+		// The room code alone is deliberately public (every player needs it to
+		// join), so controller access — which sees answers and can mark scores
+		// — requires this separate secret, checked in constant time since it's
+		// the one place in this app a secret is compared over the network.
+		if req.token == "" || subtle.ConstantTimeCompare([]byte(req.token), []byte(r.state.ControllerKey)) != 1 {
+			req.result <- AttachResult{OK: false, Reason: "Invalid or missing quizmaster key."}
+			return false
+		}
 		r.controllers[req.conn] = struct{}{}
 		req.result <- AttachResult{OK: true}
 		req.conn.SendJSON(ws.Msg(ws.ServerMsgControllerState, "state", r.state.ToControllerState()))

@@ -41,6 +41,8 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		}
 	case "controller":
 		role = wsconn.RoleController
+		// A separate secret from the room code — see room.State.ControllerKey.
+		token = r.URL.Query().Get("key")
 	case "host":
 		role = wsconn.RoleHost
 	default:

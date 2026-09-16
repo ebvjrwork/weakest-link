@@ -44,10 +44,12 @@ internal/
 
 Room lifecycle is REST, gameplay is WebSocket. There is deliberately **no "join"/"joinController" handshake message** — identity comes entirely from the connection URL, so the server can push the first state message immediately:
 
-- `POST /api/rooms` `{roundDuration, bank:{mode:"community"|"custom", questions?}}` → `{roomCode}`
+- `POST /api/rooms` `{roundDuration, bank:{mode:"community"|"custom", questions?}}` → `{roomCode, controllerKey}` — `controllerKey` is a separate secret from `roomCode` (see below), returned exactly once here; never rebroadcast.
 - `GET /api/rooms/{code}` → `{exists, phase, playerCount}` (join-screen pre-flight)
 - `POST /api/rooms/{code}/players` `{name, rejoinId?, rejoinToken?}` → `{playerId, playerToken}` (404 room gone, 409 name taken/game in progress)
-- `GET /ws?role=player&code=X&playerId=Y&token=Z` / `?role=controller&code=X` / `?role=host&code=X`
+- `GET /ws?role=player&code=X&playerId=Y&token=Z` / `?role=controller&code=X&key=K` / `?role=host&code=X`
+
+**`roomCode` vs `controllerKey`**: the 4-letter room code is intentionally public — every player needs it to join — so it must never be sufficient to gain controller access (which sees answers and can mark scores). `controllerKey` (`State.ControllerKey`, a random `NewID()` generated once in `Manager.Create` and preserved across `DoPlayAgain`) is the actual secret; `Room.handleAttach` rejects any `role=controller` WS attach whose `key` doesn't match it (constant-time compare, `internal/room/room.go`). The frontend's "Open quizmaster controller" link (`buildControllerLink`, `core/dom.js`) embeds both `?run=CODE&key=KEY`; the manual `controllerSetupView` fallback asks for both fields explicitly.
 
 Client→server messages: `{type:'vote', targetId}`, `{type:'callBank'}`, `{type:'rename', newName}` (players); `{type:'control', action, arg}` (controller — see `internal/ws/protocol.go` for the full 19-action list, e.g. `markCorrect`, `bankChain`, `setQuestionBank`).
 

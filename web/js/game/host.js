@@ -74,6 +74,7 @@ Actions.createRoom = async () => {
 
   try {
     const res = await apiPost('/api/rooms', body);
+    HOST.controllerKey = res.controllerKey;
     connectHost(res.roomCode);
   } catch (err) {
     HOST.error = err.message;
@@ -247,7 +248,7 @@ function topBarSimple() {
       <div class="stat-strip">
         <div class="stat-chip gold"><b>${fmtMoney(s.bank)}</b>Bank</div>
         ${s.phase === 'playing' ? `<div class="stat-chip"><b>${esc(s.round)}</b>Round</div>` : ''}
-        <a class="stat-chip" href="${buildControllerLink(s.roomCode)}" target="_blank" rel="noopener">Open controller &#8599;</a>
+        <a class="stat-chip" href="${buildControllerLink(s.roomCode, HOST.controllerKey)}" target="_blank" rel="noopener">Open controller &#8599;</a>
       </div>
     </div>
   `;
@@ -269,7 +270,7 @@ function hostLobbyView() {
     </div>
     <div class="room-code-display">${esc(s.roomCode)}</div>
     <div style="text-align:center;margin:4px 0 18px;">
-      <a class="big-btn gold" href="${buildControllerLink(s.roomCode)}" target="_blank" rel="noopener">Open quizmaster controller &#8599;</a>
+      <a class="big-btn gold" href="${buildControllerLink(s.roomCode, HOST.controllerKey)}" target="_blank" rel="noopener">Open quizmaster controller &#8599;</a>
     </div>
     ${body}
     <div class="footer-note">The link above opens the quizmaster's controller in a new tab &mdash; keep it open on your phone or another device to run the game.</div>

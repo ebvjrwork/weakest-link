@@ -24,11 +24,12 @@ function sendControl(action, arg) {
   if (CTRL.conn && CTRL.conn.isOpen) CTRL.conn.send({ type: 'control', action, arg });
 }
 
-export function connectController(code) {
+export function connectController(code, key) {
   setRole('controller');
   CTRL.roomCode = code;
+  CTRL.controllerKey = key || '';
   CTRL.error = null;
-  const conn = createConnection(wsURL({ role: 'controller', code }));
+  const conn = createConnection(wsURL({ role: 'controller', code, key: CTRL.controllerKey }));
   CTRL.conn = conn;
   conn.on('open', () => { CTRL.connLost = false; render(); });
   conn.on('data', (msg) => {
@@ -53,16 +54,19 @@ export function connectController(code) {
 
 Actions.ctrlJoin = () => {
   const code = (($('#ctrlRoomCodeInput') || {}).value || '').trim().toUpperCase();
-  if (!code) { alert('Enter the room code.'); return; }
+  const key = (($('#ctrlKeyInput') || {}).value || '').trim();
+  if (!code || !key) { alert('Enter both the room code and the quizmaster key from your host screen.'); return; }
   sound.unlock(); // user gesture — good spot to warm up the audio context
-  connectController(code);
+  connectController(code, key);
 };
 
 Actions.ctrlRetry = () => {
   setLocalView('controllerSetup');
   setRole(null);
   CTRL.conn = null;
-  CTRL.roomCode = '';
+  // Deliberately keep CTRL.roomCode/controllerKey so the setup form can
+  // prefill them — this path is reached after a dropped/failed connection,
+  // and re-typing a long key from scratch would be a needless hassle.
   CTRL.state = null;
   CTRL.error = null;
   CTRL.connLost = false;
@@ -235,9 +239,11 @@ export function controllerSetupView() {
       <div class="setup-card">
         <button class="back-link" data-action="goBack">&larr; Back</button>
         <h2 style="margin:0;">Quizmaster remote</h2>
-        <p style="color:var(--muted);font-size:13px;margin:10px 0 0;">Run the game from here — the main screen stays clean for players and the audience to watch.</p>
+        <p style="color:var(--muted);font-size:13px;margin:10px 0 0;">Normally you'd get here via the "Open quizmaster controller" link on the host screen. Use this form only to reconnect manually.</p>
         <label for="ctrlRoomCodeInput">Room code</label>
-        <input id="ctrlRoomCodeInput" maxlength="4" placeholder="e.g. QWXK" autocomplete="off" style="text-transform:uppercase;letter-spacing:3px;">
+        <input id="ctrlRoomCodeInput" maxlength="4" placeholder="e.g. QWXK" autocomplete="off" value="${esc(CTRL.roomCode || '')}" style="text-transform:uppercase;letter-spacing:3px;">
+        <label for="ctrlKeyInput">Quizmaster key</label>
+        <input id="ctrlKeyInput" placeholder="from the host screen's controller link" autocomplete="off" value="${esc(CTRL.controllerKey || '')}">
         <button class="big-btn gold full-btn" data-action="ctrlJoin">Open controller</button>
       </div>
     </div>

@@ -82,8 +82,8 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rm := s.Rooms.Create(duration, community, bank, usingCustom)
-	writeJSON(w, http.StatusCreated, map[string]string{"roomCode": rm.Code})
+	rm, controllerKey := s.Rooms.Create(duration, community, bank, usingCustom)
+	writeJSON(w, http.StatusCreated, map[string]string{"roomCode": rm.Code, "controllerKey": controllerKey})
 }
 
 // handleRoomSummary is the join screen's pre-flight check.

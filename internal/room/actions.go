@@ -474,7 +474,7 @@ func (s *State) DoPlayAgain() {
 	for i, p := range s.Players {
 		oldPlayers[i] = &Player{ID: p.ID, Name: p.Name, Alive: true, Connected: p.Connected, Token: p.Token}
 	}
-	fresh := NewState(s.RoomCode, s.RoundDuration, s.communityBank, s.QuestionBank, s.UsingCustom)
+	fresh := NewState(s.RoomCode, s.ControllerKey, s.RoundDuration, s.communityBank, s.QuestionBank, s.UsingCustom)
 	fresh.Players = oldPlayers
 	*s = *fresh
 }

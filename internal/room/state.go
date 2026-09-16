@@ -98,6 +98,14 @@ type State struct {
 	RoomCode      string
 	RoundDuration int // seconds, fixed at room creation
 
+	// ControllerKey is a separate secret from RoomCode, required to attach as
+	// the quizmaster controller. RoomCode alone is intentionally public (every
+	// player needs it to join), so without a second secret anyone who can join
+	// the game could also open the controller and see answers / mark scores.
+	// Never sent in any broadcast state — only returned once, directly from
+	// POST /api/rooms.
+	ControllerKey string
+
 	Players []*Player
 
 	ChainIndex int // -1 means no live chain
@@ -139,11 +147,16 @@ type State struct {
 // NewState builds a fresh lobby-phase state, mirroring newHostState().
 // communityBank is the room's default bank (the server's shared/community
 // question bank at creation time); if usingCustom is true, bank is the
-// one-off custom set supplied at room creation instead.
-func NewState(roomCode string, roundDuration int, communityBank []Question, bank []Question, usingCustom bool) *State {
+// one-off custom set supplied at room creation instead. controllerKey must be
+// generated once at room creation (see Manager.Create) and preserved across
+// DoPlayAgain — it is NOT regenerated here, since NewState is also called on
+// every play-again reset and rotating it would silently lock out an already
+// -connected quizmaster's saved link.
+func NewState(roomCode, controllerKey string, roundDuration int, communityBank []Question, bank []Question, usingCustom bool) *State {
 	return &State{
 		Phase:         PhaseLobby,
 		RoomCode:      roomCode,
+		ControllerKey: controllerKey,
 		RoundDuration: roundDuration,
 		Players:       []*Player{},
 		ChainIndex:    -1,

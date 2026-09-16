@@ -7,7 +7,7 @@ func testBank() []Question {
 }
 
 func newTestState(names ...string) *State {
-	s := NewState("TEST", 60, testBank(), testBank(), false)
+	s := NewState("TEST", "TESTKEY", 60, testBank(), testBank(), false)
 	for _, n := range names {
 		s.Players = append(s.Players, &Player{ID: NewID(), Name: n, Alive: true})
 	}
@@ -26,7 +26,7 @@ func (s *State) playerByName(name string) *Player {
 // --- join / reconnect --------------------------------------------------------------------
 
 func TestJoinDedupesNames(t *testing.T) {
-	s := NewState("TEST", 60, testBank(), testBank(), false)
+	s := NewState("TEST", "TESTKEY", 60, testBank(), testBank(), false)
 	p1, _, denied, _ := s.Join("Alex", "", "", 1000)
 	if denied || p1.Name != "Alex" {
 		t.Fatalf("expected first join to succeed as Alex, got %+v denied=%v", p1, denied)
@@ -317,7 +317,7 @@ func TestPlayAgainRevivesRosterKeepsBankZeroed(t *testing.T) {
 // --- question bank --------------------------------------------------------------------------
 
 func TestPullQuestionNeverPanicsOnEmptyBank(t *testing.T) {
-	s := NewState("TEST", 60, nil, nil, false)
+	s := NewState("TEST", "TESTKEY", 60, nil, nil, false)
 	q := s.PullQuestion() // must not panic/index-out-of-range
 	if q.Q == "" {
 		t.Fatalf("expected a defensive placeholder question, got empty")
@@ -325,7 +325,7 @@ func TestPullQuestionNeverPanicsOnEmptyBank(t *testing.T) {
 }
 
 func TestSetAndResetQuestionBank(t *testing.T) {
-	s := NewState("TEST", 60, testBank(), testBank(), false)
+	s := NewState("TEST", "TESTKEY", 60, testBank(), testBank(), false)
 	custom := []Question{{Q: "Custom?", A: "Yes"}}
 	if !s.DoSetQuestionBank(custom, 1000) {
 		t.Fatalf("expected setting a non-empty custom bank to succeed")
