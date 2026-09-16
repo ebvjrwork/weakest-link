@@ -145,7 +145,7 @@ function init() {
   // session (a fresh tab/device, e.g. after the original tab was closed).
   const hostSess = session.get('wlink_host_session', null);
   if (hostSess && hostSess.roomCode) {
-    connectHost(hostSess.roomCode);
+    connectHost(hostSess.roomCode, hostSess.controllerKey);
     return;
   }
   // Opened from the big screen's own "recovery URL" (or a bookmark of it) —

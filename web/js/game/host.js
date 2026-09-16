@@ -79,8 +79,7 @@ Actions.createRoom = async () => {
 
   try {
     const res = await apiPost('/api/rooms', body);
-    HOST.controllerKey = res.controllerKey;
-    connectHost(res.roomCode);
+    connectHost(res.roomCode, res.controllerKey);
   } catch (err) {
     HOST.error = err.message;
     render();
@@ -138,11 +137,17 @@ Actions.setBankModeCustom = () => { setupUI.bankMode = 'custom'; render(); };
 // A room lives on the server independently of any one browser tab — if the
 // host's display tab/window is closed or crashes, this is what lets them get
 // back to the SAME room instead of only ever being able to create a new one.
-// No secret needed: the host view is read-only and shows nothing a player
-// couldn't already see, so the room code alone is enough.
-export async function connectHost(code) {
+// No secret is needed to view the host screen itself (it's read-only, same
+// info a player already sees) — but `controllerKey` is only ever available
+// when it's actually known (fresh creation, or a same-tab session that saved
+// it): the ?host=CODE cross-device recovery link deliberately carries no
+// secret, so a host screen reached that way has no controller key to show,
+// and hostLobbyView/topBarSimple must hide the controller link rather than
+// build one with a missing key.
+export async function connectHost(code, controllerKey) {
   setRole('host');
   HOST.roomCode = code;
+  HOST.controllerKey = controllerKey || '';
   HOST.state = null;
   HOST.error = null;
   HOST.ready = false;
@@ -165,7 +170,9 @@ export async function connectHost(code) {
     // WebSocket attempt speak for itself rather than blocking recovery on it.
   }
 
-  session.set('wlink_host_session', { roomCode: code });
+  // Only persisted for a same-tab refresh / "reopen closed tab" — never put
+  // in the URL, so the controller key can't leak just by sharing this link.
+  session.set('wlink_host_session', { roomCode: code, controllerKey: HOST.controllerKey });
   try { window.history.replaceState(null, '', buildHostLink(code)); } catch (e) { /* ignore */ }
 
   const conn = createConnection(wsURL({ role: 'host', code }));
@@ -287,7 +294,7 @@ function topBarSimple() {
       <div class="stat-strip">
         <div class="stat-chip gold"><b>${fmtMoney(s.bank)}</b>Bank</div>
         ${s.phase === 'playing' ? `<div class="stat-chip"><b>${esc(s.round)}</b>Round</div>` : ''}
-        <a class="stat-chip" href="${buildControllerLink(s.roomCode, HOST.controllerKey)}" target="_blank" rel="noopener">Open controller &#8599;</a>
+        ${HOST.controllerKey ? `<a class="stat-chip" href="${buildControllerLink(s.roomCode, HOST.controllerKey)}" target="_blank" rel="noopener">Open controller &#8599;</a>` : ''}
       </div>
     </div>
   `;
@@ -323,10 +330,18 @@ function hostLobbyView() {
     </div>
     <div class="room-code-display">${esc(s.roomCode)}</div>
     <div style="text-align:center;margin:4px 0 18px;">
-      <a class="big-btn gold" href="${buildControllerLink(s.roomCode, HOST.controllerKey)}" target="_blank" rel="noopener">Open quizmaster controller &#8599;</a>
+      ${HOST.controllerKey ? `
+        <a class="big-btn gold" href="${buildControllerLink(s.roomCode, HOST.controllerKey)}" target="_blank" rel="noopener">Open quizmaster controller &#8599;</a>
+      ` : `
+        <div class="error-box" style="max-width:420px;margin:0 auto;">
+          This screen was reopened via its recovery link, which doesn't carry the quizmaster key for security reasons.
+          Use the original "Open quizmaster controller" link/tab from when this room was created, or the controller's
+          own reconnect form with your saved room code and key.
+        </div>
+      `}
     </div>
     ${body}
-    <div class="footer-note">The link above opens the quizmaster's controller in a new tab &mdash; keep it open on your phone or another device to run the game.</div>
+    ${HOST.controllerKey ? `<div class="footer-note">The link above opens the quizmaster's controller in a new tab &mdash; keep it open on your phone or another device to run the game.</div>` : ''}
     ${hostRecoveryNote(s.roomCode)}
   `;
 }
