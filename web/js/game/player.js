@@ -419,10 +419,17 @@ function playerEliminationView(s, me) {
   `;
 }
 
+const SHOOTOUT_REGULATION_ROUNDS = 5;
+
+// Regulation is always 5 slots; sudden death keeps appending beyond that —
+// showing every round played (instead of a hardcoded 5) is what makes
+// sudden-death progress visible instead of looking frozen.
 function shootoutKicks(shootout, slotKey) {
+  const rounds = shootout.rounds || [];
+  const slotCount = Math.max(SHOOTOUT_REGULATION_ROUNDS, rounds.length);
   let html = '';
-  for (let i = 0; i < 5; i++) {
-    const round = shootout.rounds[i];
+  for (let i = 0; i < slotCount; i++) {
+    const round = rounds[i];
     const val = round ? round[slotKey] : undefined;
     if (val === 'correct') html += '<div class="kick hit">✓</div>';
     else if (val === 'incorrect') html += '<div class="kick miss">✗</div>';
@@ -440,10 +447,11 @@ function playerShootoutView(s, me) {
   // currentTurn is an integer index (0 or 1) into shootout.order, not a player id.
   const turnPlayer = shootout.order[shootout.currentTurn];
   const myTurn = mine && turnPlayer && turnPlayer.id === s.myId;
+  const suddenRound = shootout.currentRoundIndex - SHOOTOUT_REGULATION_ROUNDS + 1;
 
   return `
     ${!mine ? `<div class="spectator-tag">You've been voted off — spectating</div>` : ''}
-    ${shootout.sudden ? `<div class="banner">Sudden death!</div>` : ''}
+    ${shootout.sudden ? `<div class="banner">Sudden death — round ${suddenRound}!</div>` : ''}
     <div class="duel">
       <div class="duel-side${shootout.currentTurn === 0 ? ' active' : ''}">
         <div class="nm">${esc(p0.name)}</div>

@@ -35,7 +35,7 @@ input,select,textarea{font-family:'Inter',sans-serif;}
 .landing-footer{margin-top:34px;display:flex;gap:18px;flex-wrap:wrap;justify-content:center;}
 .landing-footer a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px dotted var(--line);}
 .landing-footer a:hover{color:var(--gold);}
-.big-btn{padding:18px 34px;border-radius:12px;font-size:17px;font-weight:600;min-width:200px;transition:transform .15s ease;}
+.big-btn{display:inline-block;padding:18px 34px;border-radius:12px;font-size:17px;font-weight:600;min-width:200px;transition:transform .15s ease;text-decoration:none;text-align:center;box-sizing:border-box;}
 .big-btn:active{transform:scale(0.97);}
 .big-btn.gold{background:linear-gradient(180deg,#f3c463,var(--gold));color:#20150a;}
 .big-btn.gold:disabled{background:var(--panel-2);color:var(--muted);cursor:not-allowed;}
@@ -148,7 +148,7 @@ input,select,textarea{font-family:'Inter',sans-serif;}
 .duel-side .nm{font-family:'Oswald',sans-serif;font-size:20px;}
 .duel-side.active{box-shadow:0 0 0 2px var(--gold-dim),0 0 30px 6px rgba(232,178,61,0.35);background:rgba(232,178,61,0.06);}
 .duel-side.active .nm{color:var(--gold);}
-.kicks{display:flex;gap:6px;justify-content:center;margin-top:10px;}
+.kicks{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap;max-width:220px;}
 .kick{width:24px;height:24px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;}
 .kick.hit{background:var(--green);color:#06210f;border-color:var(--green);}
 .kick.miss{background:var(--red);color:#2a0709;border-color:var(--red);}

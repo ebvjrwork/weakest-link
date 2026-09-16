@@ -9,7 +9,7 @@ import {
   role, localView, setLocalView, setPendingJoinCode, HOST, CTRL, P, onRender, Actions, Binds, Changes,
 } from './state.js';
 import { hostSetupView, hostRootView } from './host.js';
-import { controllerSetupView, controllerRootView } from './controller.js';
+import { controllerSetupView, controllerRootView, connectController } from './controller.js';
 import { playerSetupView, playerRootView, connectPlayer } from './player.js';
 
 function landingView() {
@@ -20,7 +20,6 @@ function landingView() {
       <div class="landing-btns">
         <button class="big-btn gold" data-action="goHostSetup">Host on this screen</button>
         <button class="big-btn ghost" data-action="goPlayerSetup">Join as a player</button>
-        <button class="big-btn ghost" data-action="goControllerSetup">Be the quizmaster</button>
       </div>
       <div class="landing-footer">
         <a href="/submit.html">Suggest questions for the community bank</a>
@@ -140,6 +139,16 @@ function init() {
   if (sess && sess.roomCode && sess.playerId && sess.playerToken) {
     connectPlayer(sess.roomCode, sess.myName || '', { playerId: sess.playerId, playerToken: sess.playerToken });
     return;
+  }
+  // Opened from the "Open quizmaster controller" link on the host's lobby
+  // screen — connect straight in, no manual room-code entry needed.
+  const runCode = getQueryParam('run');
+  if (runCode) {
+    const clean = runCode.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+    if (clean) {
+      connectController(clean);
+      return;
+    }
   }
   const joinCode = getQueryParam('join');
   if (joinCode) {

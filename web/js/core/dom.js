@@ -46,3 +46,14 @@ export function buildInviteLink(code) {
     return '?join=' + code;
   }
 }
+
+// Same idea as buildInviteLink, but opens straight into the quizmaster
+// controller (auto-connected, no setup form) — used by the host's lobby
+// screen so the same person can run both the big screen and the controller.
+export function buildControllerLink(code) {
+  try {
+    return window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + '?run=' + code;
+  } catch (e) {
+    return '?run=' + code;
+  }
+}

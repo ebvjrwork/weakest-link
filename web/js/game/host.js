@@ -5,7 +5,7 @@
 // top of state transitions it notices along the way. No game logic lives
 // here.
 
-import { $, esc, fmtMoney } from '../core/dom.js';
+import { $, esc, fmtMoney, buildControllerLink } from '../core/dom.js';
 import { createConnection, apiPost, wsURL } from '../core/net.js';
 import * as sound from '../core/sound.js';
 import { parseCSVQuestions, parseCustomQuestions, pairsToObjects } from '../core/questions-parse.js';
@@ -247,6 +247,7 @@ function topBarSimple() {
       <div class="stat-strip">
         <div class="stat-chip gold"><b>${fmtMoney(s.bank)}</b>Bank</div>
         ${s.phase === 'playing' ? `<div class="stat-chip"><b>${esc(s.round)}</b>Round</div>` : ''}
+        <a class="stat-chip" href="${buildControllerLink(s.roomCode)}" target="_blank" rel="noopener">Open controller &#8599;</a>
       </div>
     </div>
   `;
@@ -267,8 +268,11 @@ function hostLobbyView() {
       </div>
     </div>
     <div class="room-code-display">${esc(s.roomCode)}</div>
+    <div style="text-align:center;margin:4px 0 18px;">
+      <a class="big-btn gold" href="${buildControllerLink(s.roomCode)}" target="_blank" rel="noopener">Open quizmaster controller &#8599;</a>
+    </div>
     ${body}
-    <div class="footer-note">The host runs this game from the controller on a second device.</div>
+    <div class="footer-note">The link above opens the quizmaster's controller in a new tab &mdash; keep it open on your phone or another device to run the game.</div>
   `;
 }
 
@@ -359,10 +363,16 @@ function hostEliminationView() {
   `;
 }
 
+const SHOOTOUT_REGULATION_ROUNDS = 5;
+
 function shootoutKicks(shootout, sideIndex) {
   const rounds = shootout.rounds || [];
+  // Regulation is always 5 slots; sudden death keeps appending beyond that —
+  // showing every round played (instead of a hardcoded 5) is what makes
+  // sudden-death progress visible instead of looking frozen.
+  const slotCount = Math.max(SHOOTOUT_REGULATION_ROUNDS, rounds.length);
   let out = '';
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < slotCount; i++) {
     const r = rounds[i];
     const val = r ? (sideIndex === 0 ? r.p0 : r.p1) : null;
     let cls = 'kick';
@@ -383,7 +393,8 @@ function hostShootoutView() {
   // shootout starts.
   const turnPlayer = so.order[so.currentTurn];
   const askedName = turnPlayer ? turnPlayer.name : '';
-  const prefix = so.sudden ? 'Sudden death &mdash; ' : '';
+  const suddenRound = so.currentRoundIndex - SHOOTOUT_REGULATION_ROUNDS + 1;
+  const prefix = so.sudden ? `Sudden death (round ${suddenRound}) &mdash; ` : '';
   const stageBody = so.currentQuestion
     ? `<div class="q-label">${prefix}Reading to ${esc(askedName)}</div><div class="q-text">${esc(so.currentQuestion.q)}</div>`
     : `<div class="q-text" style="color:var(--blue)">${prefix}Up next: ${esc(askedName)}</div>`;

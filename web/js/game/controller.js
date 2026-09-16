@@ -206,12 +206,18 @@ Actions.__keydown = (e) => {
 
 // --- local helpers -------------------------------------------------------
 
-// The shootout's 5-slot hit/miss row. Deliberately NOT named `kickBoxes` —
+const SHOOTOUT_REGULATION_ROUNDS = 5;
+
+// The shootout's hit/miss row. Deliberately NOT named `kickBoxes` —
 // components.js already exports a `kickBoxes` for an unrelated purpose (a
 // kickable player list), so this stays local to avoid confusion.
+// Regulation is always 5 slots; sudden death keeps appending beyond that —
+// showing every round played (instead of a hardcoded 5) is what makes
+// sudden-death progress visible instead of looking frozen.
 function shootoutKicksRow(rounds, side) {
+  const slotCount = Math.max(SHOOTOUT_REGULATION_ROUNDS, (rounds || []).length);
   let out = '';
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < slotCount; i++) {
     const r = rounds && rounds[i];
     const v = r ? r['p' + side] : null;
     if (v === 'correct') out += '<div class="kick hit">✓</div>';
@@ -434,10 +440,12 @@ function controllerShootoutView(s) {
   const p0 = sh.order[0];
   const p1 = sh.order[1];
   const turnName = sh.order[sh.currentTurn].name;
+  const suddenRound = sh.currentRoundIndex - SHOOTOUT_REGULATION_ROUNDS + 1;
+  const suddenLabel = sh.sudden ? `Sudden death (round ${suddenRound}) — ` : '';
   let stageInner;
   if (sh.currentQuestion) {
     stageInner = `
-      <div class="ctrl-asked">${sh.sudden ? 'Sudden death — ' : ''}${esc(turnName)}</div>
+      <div class="ctrl-asked">${suddenLabel}${esc(turnName)}</div>
       <div class="q-text">${esc(sh.currentQuestion.q)}</div>
       <div class="a-text">${esc(sh.currentQuestion.a)}</div>
       <div class="action-row">
@@ -447,7 +455,7 @@ function controllerShootoutView(s) {
     `;
   } else {
     stageInner = `
-      <div class="ctrl-asked" style="color:var(--blue);">${sh.sudden ? 'Sudden death' : 'Up next'}: ${esc(turnName)}</div>
+      <div class="ctrl-asked" style="color:var(--blue);">${sh.sudden ? `Sudden death (round ${suddenRound})` : 'Up next'}: ${esc(turnName)}</div>
       <div class="action-row"><button class="act-btn primary" data-action="ctrlShootoutNextQuestion">Ask next question</button></div>
     `;
   }

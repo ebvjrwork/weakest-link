@@ -29,6 +29,10 @@
 
 .elim-note{color:var(--muted);font-size:13px;margin-top:-4px;margin-bottom:10px;}
 
+/* the "Open controller" link reuses .stat-chip but is an <a>, not a <div> */
+a.stat-chip{text-decoration:none;}
+a.stat-chip:hover{border-color:var(--gold-dim);color:var(--gold);}
+
 /* --- one-shot polish animations, triggered from host.js on state deltas --- */
 
 .bank-total.pulse{animation:bankPulse .5s ease;}
