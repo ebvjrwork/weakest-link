@@ -188,6 +188,7 @@ export async function connectHost(code, controllerKey) {
     if (msg.type === 'roomClosed') {
       HOST.error = 'This room has been closed.';
       session.remove('wlink_host_session');
+      conn.close(); // definitive — stop net.js's auto-reconnect against a room that's now gone
       render();
       return;
     }

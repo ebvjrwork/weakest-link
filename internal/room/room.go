@@ -361,22 +361,37 @@ func argString(raw json.RawMessage) string {
 }
 
 func (r *Room) closeRoom() {
+	conns := make([]*ws.Conn, 0, len(r.players)+len(r.controllers)+len(r.hosts))
 	for _, c := range r.players {
 		c.SendJSON(ws.Msg(ws.ServerMsgRoomClosed))
-		c.Close()
+		conns = append(conns, c)
 	}
 	for c := range r.controllers {
 		c.SendJSON(ws.Msg(ws.ServerMsgRoomClosed))
-		c.Close()
+		conns = append(conns, c)
 	}
 	for c := range r.hosts {
 		c.SendJSON(ws.Msg(ws.ServerMsgRoomClosed))
-		c.Close()
+		conns = append(conns, c)
 	}
 	r.players = map[string]*ws.Conn{}
 	r.controllers = map[*ws.Conn]struct{}{}
 	r.hosts = map[*ws.Conn]struct{}{}
 	r.stopped = true
+
+	// SendJSON only queues the message — the write pump goroutine is what
+	// actually flushes it to the socket. Closing the connection immediately
+	// (as this used to) races that flush and often wins, so the client never
+	// receives the roomClosed notice at all and just sees a bare disconnect.
+	// A brief delay before tearing down the transport (matching the original
+	// client-only version's identical 400ms pause, for the identical reason)
+	// gives every write pump time to actually send it first.
+	go func() {
+		time.Sleep(400 * time.Millisecond)
+		for _, c := range conns {
+			c.Close()
+		}
+	}()
 }
 
 func (r *Room) tick(nowMs int64) bool {

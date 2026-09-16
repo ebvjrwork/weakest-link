@@ -83,9 +83,11 @@ function handleMessage(msg) {
   } else if (msg.type === 'kicked') {
     P.denied = 'You were removed from the game by the host.';
     session.remove('wlink_session');
+    if (P.conn) P.conn.close(); // definitive — stop net.js's auto-reconnect
   } else if (msg.type === 'roomClosed') {
     P.denied = 'The host has closed this room.';
     session.remove('wlink_session');
+    if (P.conn) P.conn.close(); // definitive — stop net.js's auto-reconnect against a room that's now gone
   } else if (msg.type === 'renameFailed') {
     P.renameError = msg.reason;
   }

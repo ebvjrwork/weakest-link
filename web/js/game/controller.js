@@ -35,7 +35,10 @@ export function connectController(code, key) {
   conn.on('data', (msg) => {
     if (msg.type === 'controllerState') { CTRL.state = msg.state; CTRL.connLost = false; }
     else if (msg.type === 'questionBankData') { CTRL.questionBankCache = msg.questions; }
-    else if (msg.type === 'roomClosed') { CTRL.error = 'The host closed this room.'; }
+    else if (msg.type === 'roomClosed') {
+      CTRL.error = 'The host closed this room.';
+      conn.close(); // definitive — stop net.js's auto-reconnect against a room that's now gone
+    }
     render();
   });
   conn.on('close', (info) => {
