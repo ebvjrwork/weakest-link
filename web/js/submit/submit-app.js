@@ -176,7 +176,15 @@ function formView() {
     <div class="submit-wrap">
       <a class="back-link" href="/">&larr; Back to Chain Reaction</a>
       <div class="submit-card">
-        <h1 class="submit-title">Suggest a Question</h1>
+        <div class="submit-brand">
+          <svg class="tool-logo" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+            <g fill="none" stroke="#e8b23d" stroke-width="4" stroke-linecap="round">
+              <ellipse cx="12" cy="12.5" rx="6.2" ry="5" transform="rotate(-32 12 12.5)"/>
+              <ellipse cx="20" cy="19.5" rx="6.2" ry="5" transform="rotate(-32 20 19.5)"/>
+            </g>
+          </svg>
+          <h1 class="submit-title">Suggest a Question</h1>
+        </div>
         <p class="submit-sub">Help grow the community trivia bank for Chain Reaction.</p>
         ${noticeHtml()}
         ${errorHtml()}
@@ -195,7 +203,7 @@ function submittedView() {
     : "Your question has been sent to our moderators. We'll review it before it joins the community bank — you won't see it appear immediately.";
   return `
     <div class="submit-wrap">
-      <div class="submit-card">
+      <div class="submit-card submit-card-done">
         <div class="submit-done">
           <div class="submit-check">&#10003;</div>
           <h2>Thanks!</h2>

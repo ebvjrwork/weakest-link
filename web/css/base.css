@@ -28,13 +28,15 @@ input,select,textarea{font-family:'Inter',sans-serif;}
 
 /* ---------- Landing ---------- */
 .landing{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px;text-align:center;}
+.landing .brand-mark{margin-bottom:6px;filter:drop-shadow(0 0 14px rgba(232,178,61,0.45));animation:brandMarkIn .6s ease, brandMarkGlow 3.2s ease-in-out 0.6s infinite;}
+@keyframes brandMarkIn{from{opacity:0;transform:scale(.6) rotate(-25deg);}to{opacity:1;transform:scale(1) rotate(0);}}
+@keyframes brandMarkGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(232,178,61,0.35));}50%{filter:drop-shadow(0 0 20px rgba(232,178,61,0.65));}}
 .landing .brand{font-family:'Oswald',sans-serif;font-weight:600;font-size:clamp(40px,9vw,72px);letter-spacing:0.5px;margin:0;line-height:1;background:linear-gradient(180deg,#fff, var(--gold) 140%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 .landing .brand span{color:var(--gold);-webkit-text-fill-color:var(--gold);}
 .landing .tag{color:var(--muted);font-size:16px;margin:10px 0 40px;max-width:440px;}
 .landing-btns{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
 .landing-footer{margin-top:34px;display:flex;gap:18px;flex-wrap:wrap;justify-content:center;}
-.landing-footer a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px dotted var(--line);}
-.landing-footer a:hover{color:var(--gold);}
+.landing-footer span{color:var(--muted);font-size:13px;}
 .big-btn{display:inline-block;padding:18px 34px;border-radius:12px;font-size:17px;font-weight:600;min-width:200px;transition:transform .15s ease;text-decoration:none;text-align:center;box-sizing:border-box;}
 .big-btn:active{transform:scale(0.97);}
 .big-btn.gold{background:linear-gradient(180deg,#f3c463,var(--gold));color:#20150a;}

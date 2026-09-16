@@ -12,18 +12,78 @@ import { hostSetupView, hostRootView, connectHost } from './host.js';
 import { controllerSetupView, controllerRootView, connectController } from './controller.js';
 import { playerSetupView, playerRootView, connectPlayer } from './player.js';
 
+// Ambient background "embers" — faint drifting sparks that rise slowly
+// behind the landing hero. Purely decorative (aria-hidden, pointer-events
+// disabled via CSS), randomized per mount via inline custom properties so
+// the CSS keyframes (defined in landing.css) can stay generic.
+function landingEmbers(count) {
+  let out = '';
+  for (let i = 0; i < count; i++) {
+    const x = (Math.random() * 100).toFixed(1);
+    const size = (Math.random() * 3 + 2).toFixed(1);
+    const dur = (Math.random() * 10 + 10).toFixed(1);
+    const delay = (-Math.random() * dur).toFixed(1);
+    const drift = (Math.random() * 44 - 22).toFixed(0);
+    const op = (Math.random() * 0.25 + 0.15).toFixed(2);
+    out += `<span class="ember" style="--x:${x}%;--size:${size}px;--dur:${dur}s;--delay:${delay}s;--drift:${drift}px;--op:${op}"></span>`;
+  }
+  return out;
+}
+
+// A handful of the same two-ring "chain link" brand motif, shrunk way down,
+// scattered behind the hero and set adrift with a slow rotate/float loop —
+// echoes the logo mark without competing with it.
+function landingChainDrift(count) {
+  let out = '';
+  for (let i = 0; i < count; i++) {
+    const top = (Math.random() * 90 + 4).toFixed(1);
+    const left = (Math.random() * 90 + 4).toFixed(1);
+    const size = (Math.random() * 26 + 22).toFixed(0);
+    const dur = (Math.random() * 10 + 14).toFixed(1);
+    const delay = (-Math.random() * dur).toFixed(1);
+    const rot = (Math.random() * 360).toFixed(0);
+    const op = (Math.random() * 0.12 + 0.08).toFixed(2);
+    out += `
+      <svg class="drift-link" style="--top:${top}%;--left:${left}%;--size:${size}px;--dur:${dur}s;--delay:${delay}s;--rot:${rot}deg;--op:${op}" viewBox="0 0 32 32" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round">
+          <ellipse cx="12" cy="12.5" rx="6.2" ry="5" transform="rotate(-32 12 12.5)"/>
+          <ellipse cx="20" cy="19.5" rx="6.2" ry="5" transform="rotate(-32 20 19.5)"/>
+        </g>
+      </svg>`;
+  }
+  return out;
+}
+
 function landingView() {
   return `
     <div class="landing">
+      <div class="landing-ambient" aria-hidden="true">
+        ${landingEmbers(13)}
+        ${landingChainDrift(5)}
+      </div>
+      <div class="landing-glow" aria-hidden="true"></div>
+      <svg class="brand-mark" viewBox="0 0 32 32" width="76" height="76" aria-hidden="true">
+        <g fill="none" stroke="url(#brandMarkGold)" stroke-width="4" stroke-linecap="round">
+          <ellipse cx="12" cy="12.5" rx="6.2" ry="5" transform="rotate(-32 12 12.5)"/>
+          <ellipse cx="20" cy="19.5" rx="6.2" ry="5" transform="rotate(-32 20 19.5)"/>
+        </g>
+        <defs>
+          <linearGradient id="brandMarkGold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fff"/>
+            <stop offset="100%" stop-color="#e8b23d"/>
+          </linearGradient>
+        </defs>
+      </svg>
       <h1 class="brand">Chain <span>Reaction</span></h1>
-      <p class="tag">A fast-paced trivia elimination party game. Pick a big screen to host on, grab your phones, and find out who's the weakest link.</p>
-      <div class="landing-btns">
-        <button class="big-btn gold" data-action="goHostSetup">Host on this screen</button>
-        <button class="big-btn ghost" data-action="goPlayerSetup">Join as a player</button>
+      <div class="landing-card">
+        <p class="tag">A fast-paced trivia elimination party game. Pick a big screen to host on, grab your phones, and find out who's the weakest link.</p>
+        <div class="landing-btns">
+          <button class="big-btn gold" data-action="goHostSetup">Host on this screen</button>
+          <button class="big-btn ghost" data-action="goPlayerSetup">Join as a player</button>
+        </div>
       </div>
       <div class="landing-footer">
-        <a href="/submit.html">Suggest questions for the community bank</a>
-        <a href="/admin.html">Admin</a>
+        <span>created by axiomatic7689</span>
       </div>
     </div>
   `;

@@ -3,16 +3,23 @@
    tool-btn primitives (tool-base.css) but with none of the gameshow chrome
    and none of the admin table density. Loaded after base.css + tool-base.css. */
 
-.submit-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 16px;}
+.submit-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 16px;position:relative;}
+.submit-wrap::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(circle at 50% 0%,rgba(232,178,61,0.07),transparent 55%);pointer-events:none;}
 
-.submit-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:30px 28px;max-width:520px;width:100%;text-align:left;}
+.submit-card{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0) 160px) var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:30px 28px;max-width:520px;width:100%;text-align:left;box-shadow:0 1px 0 rgba(255,255,255,0.02) inset,0 24px 60px -30px rgba(0,0,0,0.6);}
+
+/* Small inline brand mark beside the page title — quieter than the game's
+   landing-page treatment (no glow/entrance animation), just enough to read
+   as "same product family". */
+.submit-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;}
+.submit-brand .submit-title{margin:0;}
 
 .submit-title{margin:0 0 6px;font-size:24px;font-weight:600;text-align:center;}
 .submit-sub{margin:0 0 18px;color:var(--muted);font-size:14px;text-align:center;}
 
 /* Permanent moderation-boundary notice — the key signal this is the public
    suggestion box, not the authenticated admin editor. */
-.submit-notice{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);font-size:12.5px;line-height:1.5;padding:12px 14px;border-radius:10px;margin-bottom:18px;}
+.submit-notice{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--blue);color:var(--muted);font-size:12.5px;line-height:1.5;padding:12px 14px;border-radius:10px;margin-bottom:18px;}
 
 .submit-question-input{min-height:70px;}
 
@@ -26,14 +33,21 @@
 .submit-filename button{padding:4px 10px;font-size:11px;}
 
 /* Confirmation state — some visual warmth, distinct from both the gameshow
-   screens and the flat admin table. */
+   screens and the flat admin table. A quiet scale-in on the card plus a
+   slightly delayed "pop" on the checkmark gives the moment a satisfying
+   beat without tipping into gameshow-style flourish (no confetti/bounce). */
+.submit-card-done{animation:submitCardIn .35s cubic-bezier(.16,.84,.44,1) both;}
+@keyframes submitCardIn{from{opacity:0;transform:scale(.96) translateY(6px);}to{opacity:1;transform:scale(1) translateY(0);}}
+
 .submit-done{text-align:center;padding:10px 4px 4px;}
-.submit-check{width:56px;height:56px;line-height:54px;border-radius:50%;background:rgba(63,166,108,0.14);border:1px solid var(--green);color:var(--green);font-size:26px;margin:0 auto 14px;}
+.submit-check{width:56px;height:56px;line-height:54px;border-radius:50%;background:rgba(63,166,108,0.14);border:1px solid var(--green);color:var(--green);font-size:26px;margin:0 auto 14px;box-shadow:0 0 0 6px rgba(63,166,108,0.08);}
+.submit-card-done .submit-check{animation:submitCheckIn .45s cubic-bezier(.34,1.56,.64,1) .12s both;}
+@keyframes submitCheckIn{from{opacity:0;transform:scale(.5);}60%{opacity:1;}to{opacity:1;transform:scale(1);}}
 .submit-done h2{margin:0 0 4px;font-size:20px;}
 .submit-count{color:var(--gold);font-size:13px;font-weight:600;margin:0 0 10px;}
 .submit-done p{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 18px;}
 .submit-back{margin-top:14px;text-align:center;}
-.submit-back a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px dotted var(--line);}
+.submit-back a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px dotted var(--line);transition:color .15s ease;}
 .submit-back a:hover{color:var(--gold);}
 
 @media (max-width:480px){

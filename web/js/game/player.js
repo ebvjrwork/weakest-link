@@ -31,6 +31,50 @@ function markStatPop(kind) {
   }, 400);
 }
 
+// One-shot flag for the turn-flag's entrance bounce: true only for the
+// render right after this device FIRST becomes "on the spot" (either the
+// regular per-round asked player, or the active shootout duellist) — so the
+// bounce plays once when a turn starts rather than looping the whole time
+// the "yours" glow is showing.
+let turnPop = false;
+let turnPopTimer = null;
+
+function markTurnPop() {
+  turnPop = true;
+  clearTimeout(turnPopTimer);
+  turnPopTimer = setTimeout(() => {
+    turnPop = false;
+    render();
+  }, 500);
+}
+
+function isMyTurnNow(s) {
+  if (!s) return false;
+  if (s.phase === 'playing') return s.currentAskedId === P.myId;
+  if (s.phase === 'shootout' && s.shootout) {
+    const turnPlayer = s.shootout.order[s.shootout.currentTurn];
+    return !!turnPlayer && turnPlayer.id === P.myId;
+  }
+  return false;
+}
+
+// Which single shootout kick (round index + side) just transitioned from
+// unscored to correct/incorrect, if any — recomputed fresh on every message
+// so it naturally reads as null again once that round is no longer the
+// newest change (no timer needed: unlike a plain visual flag, this is a
+// direct diff of server data, not something we set-and-forget).
+function freshKickSlot(prevRounds, nextRounds) {
+  for (let i = 0; i < nextRounds.length; i++) {
+    const cur = nextRounds[i];
+    if (!cur) continue;
+    const prevRound = prevRounds[i];
+    if (cur.p0 && (!prevRound || !prevRound.p0)) return { index: i, side: 'p0' };
+    if (cur.p1 && (!prevRound || !prevRound.p1)) return { index: i, side: 'p1' };
+  }
+  return null;
+}
+let freshKick = null;
+
 function getMe(s) {
   return s.players.find((p) => p.id === s.myId) || {
     correct: 0, incorrect: 0, alive: true, name: P.myName,
@@ -52,6 +96,10 @@ function handleMessage(msg) {
     const prevPhase = prevState && prevState.phase;
     const prevMe = prevState ? prevState.players.find((p) => p.id === P.myId) : null;
     const prevAlive = prevMe ? prevMe.alive : undefined;
+    const wasMyTurnBefore = isMyTurnNow(prevState);
+    const prevRounds = (prevState && prevState.shootout && prevState.shootout.rounds) || [];
+    const nextRounds = (msg.state.shootout && msg.state.shootout.rounds) || [];
+    freshKick = freshKickSlot(prevRounds, nextRounds);
 
     P.state = msg.state;
     P.connLost = false;
@@ -67,6 +115,10 @@ function handleMessage(msg) {
     if (prevMe && meNow) {
       if (meNow.correct > prevMe.correct) markStatPop('correct');
       else if (meNow.incorrect > prevMe.incorrect) markStatPop('incorrect');
+    }
+
+    if (isMyTurnNow(msg.state) && !wasMyTurnBefore) {
+      markTurnPop();
     }
 
     if (prevPhase && prevPhase !== 'gameover' && msg.state.phase === 'gameover') {
@@ -351,7 +403,7 @@ function playerPlayingView(s, me) {
   return `
     ${bigTimerHtml()}
     ${playerStatsHtml(me)}
-    <div class="turn-flag ${yourTurn ? 'yours' : 'theirs'}">
+    <div class="turn-flag ${yourTurn ? 'yours' : 'theirs'}${yourTurn && turnPop ? ' enter' : ''}">
       ${yourTurn ? "You're on the spot!" : `${esc(askedPlayer ? askedPlayer.name : '…')} is answering`}
     </div>
     ${s.currentQuestion ? `
@@ -433,8 +485,9 @@ function shootoutKicks(shootout, slotKey) {
   for (let i = 0; i < slotCount; i++) {
     const round = rounds[i];
     const val = round ? round[slotKey] : undefined;
-    if (val === 'correct') html += '<div class="kick hit">✓</div>';
-    else if (val === 'incorrect') html += '<div class="kick miss">✗</div>';
+    const impact = freshKick && freshKick.index === i && freshKick.side === slotKey ? ' kick-impact' : '';
+    if (val === 'correct') html += `<div class="kick hit${impact}">✓</div>`;
+    else if (val === 'incorrect') html += `<div class="kick miss${impact}">✗</div>`;
     else html += '<div class="kick"></div>';
   }
   return html;
@@ -465,7 +518,7 @@ function playerShootoutView(s, me) {
       </div>
     </div>
     ${mine
-      ? `<div class="turn-flag ${myTurn ? 'yours' : 'theirs'}">${myTurn ? "You're up!" : 'Waiting for your turn'}</div>`
+      ? `<div class="turn-flag ${myTurn ? 'yours' : 'theirs'}${myTurn && turnPop ? ' enter' : ''}">${myTurn ? "You're up!" : 'Waiting for your turn'}</div>`
       : `<div class="turn-flag theirs">${esc(turnPlayer ? turnPlayer.name : '…')}'s turn</div>${everyoneProgress(s.players)}`}
   `;
 }

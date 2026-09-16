@@ -66,8 +66,15 @@ function render() {
 function loginView() {
   return `
     <div class="tool-login">
-      <div class="icon">🔗</div>
-      <h1>Chain Reaction Admin</h1>
+      <div class="tool-brand tool-brand-stack">
+        <svg class="tool-logo" viewBox="0 0 32 32" width="36" height="36" aria-hidden="true">
+          <g fill="none" stroke="#e8b23d" stroke-width="4" stroke-linecap="round">
+            <ellipse cx="12" cy="12.5" rx="6.2" ry="5" transform="rotate(-32 12 12.5)"/>
+            <ellipse cx="20" cy="19.5" rx="6.2" ry="5" transform="rotate(-32 20 19.5)"/>
+          </g>
+        </svg>
+        <h1>Chain Reaction Admin</h1>
+      </div>
       <p style="color:var(--muted);font-size:13px;margin:6px 0 20px;">Sign in to manage the question bank</p>
       ${state.loginError ? `<div class="tool-error">${esc(state.loginError)}</div>` : ''}
       <form class="tool-form" data-form="login">
@@ -86,9 +93,17 @@ function shellView() {
   return `
     <div class="tool-shell">
       <div class="tool-header">
-        <div>
-          <h1>Chain Reaction Admin</h1>
-          <div class="sub">Manage the trivia question bank and review public submissions</div>
+        <div class="tool-brand">
+          <svg class="tool-logo" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+            <g fill="none" stroke="#e8b23d" stroke-width="4" stroke-linecap="round">
+              <ellipse cx="12" cy="12.5" rx="6.2" ry="5" transform="rotate(-32 12 12.5)"/>
+              <ellipse cx="20" cy="19.5" rx="6.2" ry="5" transform="rotate(-32 20 19.5)"/>
+            </g>
+          </svg>
+          <div>
+            <h1>Chain Reaction Admin</h1>
+            <div class="sub">Manage the trivia question bank and review public submissions</div>
+          </div>
         </div>
         <div class="tool-nav">
           <button data-action="showQuestions" class="${state.view === 'questions' ? 'active' : ''}">Questions</button>
@@ -108,7 +123,7 @@ function questionsView() {
 
   let tableHtml;
   if (q.loading) {
-    tableHtml = `<div class="tool-empty">Loading…</div>`;
+    tableHtml = `<div class="tool-empty tool-empty--loading">Loading…</div>`;
   } else if (q.items.length === 0) {
     tableHtml = `<div class="tool-empty">No questions found.</div>`;
   } else {
@@ -196,7 +211,7 @@ function moderationView() {
 
   let listHtml;
   if (m.loading) {
-    listHtml = `<div class="tool-empty">Loading…</div>`;
+    listHtml = `<div class="tool-empty tool-empty--loading">Loading…</div>`;
   } else if (m.items.length === 0) {
     listHtml = `<div class="tool-empty">No pending submissions</div>`;
   } else {
@@ -255,7 +270,7 @@ function submissionHtml(item) {
     `;
 
   return `
-    <div class="admin-submission" data-id="${item.id}">
+    <div class="admin-submission${editing ? ' editing' : ''}" data-id="${item.id}">
       <div><strong>${esc(item.question)}</strong></div>
       <div class="a-cell">${esc(item.answer)}</div>
       <div class="muted" style="margin-top:6px;">${submitter}</div>

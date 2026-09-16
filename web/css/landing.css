@@ -1,0 +1,184 @@
+/* ---------- Landing page polish ----------
+   Additive-only: extends the `.landing` / `.big-btn` selectors already
+   defined in base.css with new declarations (position, decorative layers,
+   hover states). Nothing here redefines a property base.css already sets,
+   so load order relative to base.css does not matter.
+   New classes introduced here: .landing-ambient, .ember, .drift-link,
+   .landing-glow, .landing-card. */
+
+.landing{
+  position:relative;
+  overflow:hidden; /* contain the drifting ambient layer, never causes page scroll */
+  isolation:isolate;
+}
+
+/* Everything that should sit visually above the ambient/glow layers. */
+.landing .brand-mark,
+.landing .brand,
+.landing-card,
+.landing-footer{
+  position:relative;
+  z-index:1;
+}
+
+/* ---- ambient decorative layer (embers + drifting chain-link glyphs) ---- */
+
+.landing-ambient{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+}
+
+.ember{
+  position:absolute;
+  left:var(--x);
+  bottom:-12px;
+  width:var(--size);
+  height:var(--size);
+  border-radius:50%;
+  background:radial-gradient(circle, #ffe9b8, var(--gold) 60%, transparent 76%);
+  opacity:0;
+  will-change:transform, opacity;
+  animation:emberRise var(--dur) ease-in var(--delay) infinite;
+}
+
+@keyframes emberRise{
+  0%{opacity:0; transform:translate(0,0);}
+  12%{opacity:var(--op);}
+  50%{transform:translate(var(--drift), -52vh);}
+  88%{opacity:var(--op);}
+  100%{opacity:0; transform:translate(calc(var(--drift) * 2), -102vh);}
+}
+
+.drift-link{
+  position:absolute;
+  top:var(--top);
+  left:var(--left);
+  width:var(--size);
+  height:var(--size);
+  color:var(--gold);
+  opacity:0;
+  will-change:transform, opacity;
+  animation:linkDrift var(--dur) ease-in-out var(--delay) infinite;
+}
+
+@keyframes linkDrift{
+  0%{opacity:0; transform:rotate(var(--rot)) translate(0,0) scale(0.9);}
+  15%{opacity:var(--op);}
+  50%{transform:rotate(calc(var(--rot) + 24deg)) translate(16px,-20px) scale(1);}
+  85%{opacity:var(--op);}
+  100%{opacity:0; transform:rotate(calc(var(--rot) + 48deg)) translate(-12px,16px) scale(0.9);}
+}
+
+/* soft radial bloom anchored behind the brand mark / heading */
+.landing-glow{
+  position:absolute;
+  top:4%;
+  left:50%;
+  z-index:0;
+  width:min(560px, 92vw);
+  height:min(420px, 70vw);
+  transform:translateX(-50%);
+  background:radial-gradient(ellipse at center, rgba(232,178,61,0.20), rgba(232,178,61,0.06) 45%, transparent 72%);
+  filter:blur(2px);
+  pointer-events:none;
+  animation:landingGlowPulse 6s ease-in-out infinite;
+}
+
+@keyframes landingGlowPulse{
+  0%,100%{opacity:0.75;}
+  50%{opacity:1;}
+}
+
+/* ---- hero card: gives the tagline + buttons some structure/weight ---- */
+
+.landing-card{
+  margin-top:6px;
+  width:100%;
+  max-width:480px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:30px 32px 34px;
+  border-radius:20px;
+  background:linear-gradient(180deg, rgba(26,33,56,0.62), rgba(18,24,41,0.5));
+  border:1px solid rgba(232,178,61,0.16);
+  box-shadow:0 24px 60px -24px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+
+.landing-card .tag{
+  margin-top:0;
+}
+
+/* ---- button micro-interactions (kept scoped under .landing so base.css's
+   generic .big-btn / .big-btn:active rules are untouched) ---- */
+
+.landing .big-btn{
+  position:relative;
+  overflow:hidden;
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.landing .big-btn:hover{
+  transform:translateY(-2px);
+}
+
+.landing .big-btn.gold:hover{
+  filter:brightness(1.06);
+  box-shadow:0 10px 26px -8px rgba(232,178,61,0.55), 0 0 0 1px rgba(232,178,61,0.4);
+}
+
+.landing .big-btn.ghost:hover{
+  border-color:var(--gold-dim);
+  color:var(--gold);
+  box-shadow:0 10px 22px -10px rgba(0,0,0,0.55);
+}
+
+.landing .big-btn:focus-visible{
+  outline:2px solid var(--gold);
+  outline-offset:3px;
+}
+
+/* subtle shine sweep on the primary button's hover, clipped by overflow:hidden above */
+.landing .big-btn.gold::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+  transform:translateX(-120%);
+  transition:transform .6s ease;
+  pointer-events:none;
+}
+
+.landing .big-btn.gold:hover::after{
+  transform:translateX(120%);
+}
+
+/* ---- responsiveness: phone (joining) up through TV (hosting) ---- */
+
+@media (max-width:480px){
+  .landing-card{
+    padding:22px 20px 26px;
+    border-radius:16px;
+  }
+}
+
+@media (min-width:1400px){
+  .landing-card{
+    max-width:560px;
+  }
+}
+
+/* respect reduced-motion preferences: keep the ambient layer present but static */
+@media (prefers-reduced-motion:reduce){
+  .ember,
+  .drift-link,
+  .landing-glow{
+    animation:none;
+    opacity:var(--op, 0.6);
+  }
+}

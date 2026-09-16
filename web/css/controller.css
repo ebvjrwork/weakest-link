@@ -18,3 +18,49 @@
 .ctrl-question-panel {
   border-left: 3px solid var(--blue);
 }
+
+/* --- smoother panel entrance --------------------------------------------- */
+/* Scoped to .ctrl-wrap so it only ever touches panels rendered by this
+   screen, not any other role's markup that happens to share the .panel
+   class from base.css. */
+.ctrl-wrap .panel {
+  animation: ctrlPanelIn .25s ease;
+}
+@keyframes ctrlPanelIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- button hover polish (the quizmaster is often on a laptop/tablet, so
+   hover affordance is worth it here even though it's a no-op on touch) --- */
+.ctrl-wrap .act-btn:hover:not(:disabled),
+.ctrl-wrap .big-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* --- countdown urgency: pulse + glow once the timer/controller's big
+   countdown drops under 10s (.low is toggled by main.js's ticker) --- */
+.big-timer.low {
+  animation: timerUrgentPulse .6s ease-in-out infinite;
+}
+@keyframes timerUrgentPulse {
+  0%, 100% { transform: scale(1); text-shadow: 0 0 0 rgba(229, 72, 77, 0); }
+  50% { transform: scale(1.08); text-shadow: 0 0 20px rgba(229, 72, 77, .7); }
+}
+
+/* --- shootout kick impact: quick scale-in/settle instead of appearing statically ---
+   Gated on .kick-impact (added only to the single kick that just changed,
+   for exactly the render it changed on) rather than the bare .hit/.miss
+   state classes — those stay applied permanently once a kick is scored, and
+   since every state broadcast fully rebuilds this row from scratch, an
+   unconditional animation on .hit/.miss would replay on every already-
+   scored kick each time any new kick lands. */
+.kick.kick-impact {
+  animation: kickImpact .3s ease;
+}
+@keyframes kickImpact {
+  0% { transform: scale(.3); opacity: 0; }
+  60% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); }
+}

@@ -23,10 +23,92 @@ import {
 } from './components.js';
 
 // One-shot render flags for CSS animations that should replay exactly once
-// right after a state transition (chain climb / bank increase), cleared a
-// tick after the render that consumes them.
-const hostFX = { justClimbed: false, bankPulse: false };
+// right after a state transition (chain climb / bank increase / phase
+// change), each cleared by its OWN timer matched to its own CSS animation
+// duration (rungPop/bankPulse: .5s, phaseWashFade: .9s — see host.css). A
+// single shared short timeout would clear all three well before the slower
+// ones finish playing, and since #app is fully rebuilt on every subsequent
+// broadcast, an early clear tears the still-animating element out mid-flight
+// instead of letting it finish.
+const hostFX = { justClimbed: false, bankPulse: false, phaseWash: null };
+let justClimbedTimer = null;
+let bankPulseTimer = null;
+let phaseWashTimer = null;
 let confettiSpawned = false;
+
+// --- roaming "TV studio" spotlight ---------------------------------------
+// A single position:fixed glow element that lives OUTSIDE the #app tree
+// (appended straight to <body>, never included in a template string) so the
+// full-innerHTML-replace render model never destroys or recreates it. After
+// every render we look up whichever element is currently "in the spotlight"
+// — the asked player's podium, the voter being revealed, the active
+// shootout duellist, or (falling back, since no podium is highlighted once
+// someone's already been voted off) the eliminated player's card — and
+// reposition this element on top of it. A CSS transition on left/top/size
+// then makes it visibly travel there, like a single stage light swinging
+// between focus points, instead of each element just statically lighting up.
+let spotlightEl = null;
+
+function roamingSpotlightTarget() {
+  return document.querySelector('.host-wrap .podium.spotlight')
+    || document.querySelector('.host-wrap .duel-side.active')
+    || document.querySelector('.host-wrap .elim-card');
+}
+
+function updateRoamingSpotlight() {
+  if (!spotlightEl) {
+    spotlightEl = document.createElement('div');
+    spotlightEl.className = 'roaming-spotlight';
+    document.body.appendChild(spotlightEl);
+  }
+  const target = roamingSpotlightTarget();
+  if (!target) {
+    spotlightEl.classList.remove('on');
+    return;
+  }
+  const r = target.getBoundingClientRect();
+  const size = Math.max(180, Math.max(r.width, r.height) * 2);
+  spotlightEl.style.left = `${r.left + r.width / 2}px`;
+  spotlightEl.style.top = `${r.top + r.height / 2}px`;
+  spotlightEl.style.width = `${size}px`;
+  spotlightEl.style.height = `${size}px`;
+  spotlightEl.classList.add('on');
+}
+
+// Every render() call site in this file goes through this wrapper instead,
+// so the roaming spotlight always stays in sync with whatever just mounted.
+function renderHost() {
+  render();
+  updateRoamingSpotlight();
+}
+
+// --- bank counter tween ---------------------------------------------------
+// Mirrors the .js-timer technique from main.js's startLiveTicker: patch a
+// text node directly via requestAnimationFrame rather than re-rendering, so
+// the displayed bank total visibly counts up from its old value instead of
+// just snapping to the new one. (.bank-total.pulse still handles the
+// container-level "something happened" pop.)
+// A generation token (rather than a raw rAF handle) guards against a second
+// bank increase landing before the first tween finishes: the stale step()
+// closure keeps running but bails out as soon as it notices a newer tween
+// has superseded it, instead of both loops racing to write the same node.
+let bankTweenToken = 0;
+function tweenBankAmount(from, to) {
+  const node = document.querySelector('.js-bank-amount');
+  if (!node) return;
+  const token = (bankTweenToken += 1);
+  const start = performance.now();
+  const duration = 500;
+  function step(now) {
+    if (token !== bankTweenToken) return;
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - (1 - t) * (1 - t); // ease-out
+    const val = Math.round(from + (to - from) * eased);
+    node.textContent = fmtMoney(val);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
 // --- room-creation screen ----------------------------------------------------------------
 
@@ -82,7 +164,7 @@ Actions.createRoom = async () => {
     connectHost(res.roomCode, res.controllerKey);
   } catch (err) {
     HOST.error = err.message;
-    render();
+    renderHost();
   }
 };
 
@@ -97,7 +179,7 @@ Actions.retryHost = () => {
   try { window.history.replaceState(null, '', window.location.pathname); } catch (e) { /* ignore */ }
   setRole(null);
   setLocalView('hostSetup');
-  render();
+  renderHost();
 };
 
 Binds.setupQuestionsDraft = (val) => { setupUI.questionsDraft = val; };
@@ -110,7 +192,7 @@ Changes.setupCsv = (el) => {
     const text = String(reader.result || '');
     setupUI.csvParsedQuestions = parseCSVQuestions(text);
     setupUI.csvFileName = file.name;
-    render();
+    renderHost();
   };
   reader.onerror = () => {
     alert('Could not read that file.');
@@ -121,16 +203,16 @@ Changes.setupCsv = (el) => {
 // The parsed CSV preview is already staged in setupUI as soon as the file is
 // read; "Use these questions" just needs to keep the preview panel around
 // (createRoom reads setupUI.csvParsedQuestions directly), so this is a no-op.
-Actions.setupUseCsvQuestions = () => { render(); };
+Actions.setupUseCsvQuestions = () => { renderHost(); };
 
 Actions.setupClearCsvPreview = () => {
   setupUI.csvParsedQuestions = null;
   setupUI.csvFileName = null;
-  render();
+  renderHost();
 };
 
-Actions.setBankModeCommunity = () => { setupUI.bankMode = 'community'; render(); };
-Actions.setBankModeCustom = () => { setupUI.bankMode = 'custom'; render(); };
+Actions.setBankModeCommunity = () => { setupUI.bankMode = 'community'; renderHost(); };
+Actions.setBankModeCustom = () => { setupUI.bankMode = 'custom'; renderHost(); };
 
 // --- connection --------------------------------------------------------------------------
 
@@ -152,7 +234,7 @@ export async function connectHost(code, controllerKey) {
   HOST.error = null;
   HOST.ready = false;
   HOST.connLost = false;
-  render();
+  renderHost();
 
   // A stale recovery link/session (room already ended, or the server
   // restarted) would otherwise retry the WebSocket forever with no clear
@@ -162,7 +244,7 @@ export async function connectHost(code, controllerKey) {
     if (!summary.exists) {
       HOST.error = 'This room no longer exists — it may have ended, or the server restarted.';
       session.remove('wlink_host_session');
-      render();
+      renderHost();
       return;
     }
   } catch (e) {
@@ -180,7 +262,7 @@ export async function connectHost(code, controllerKey) {
 
   conn.on('open', () => {
     HOST.connLost = false;
-    render();
+    renderHost();
   });
 
   conn.on('data', (msg) => {
@@ -189,20 +271,26 @@ export async function connectHost(code, controllerKey) {
       HOST.error = 'This room has been closed.';
       session.remove('wlink_host_session');
       conn.close(); // definitive — stop net.js's auto-reconnect against a room that's now gone
-      render();
+      renderHost();
       return;
     }
     if (msg.type !== 'hostState') return;
     const prev = HOST.state;
     const next = msg.state;
+    const prevRounds = (prev && prev.shootout && prev.shootout.rounds) || [];
+    const nextRounds = (next.shootout && next.shootout.rounds) || [];
+    freshKick = freshKickSlot(prevRounds, nextRounds);
     HOST.state = next;
     HOST.ready = true;
 
     let enteredGameOver = false;
+    let bankIncreasedFrom = null;
     if (prev) {
       if (prev.chainIndex < next.chainIndex) {
         sound.correct();
         hostFX.justClimbed = true;
+        clearTimeout(justClimbedTimer);
+        justClimbedTimer = setTimeout(() => { hostFX.justClimbed = false; }, 550);
       }
       if (next.chainIndex === -1 && prev.chainIndex >= 0 && prev.phase === 'playing' && next.phase === 'playing') {
         sound.wrong();
@@ -210,26 +298,41 @@ export async function connectHost(code, controllerKey) {
       if (next.bank > prev.bank) {
         sound.bank();
         hostFX.bankPulse = true;
+        clearTimeout(bankPulseTimer);
+        bankPulseTimer = setTimeout(() => { hostFX.bankPulse = false; }, 550);
+        bankIncreasedFrom = prev.bank;
+      }
+      // Brief full-screen color-wash keyed to phase transitions — a one-shot
+      // flag exactly like justClimbed/bankPulse above, just rendered as a
+      // fixed overlay div (see hostRootView) instead of a class on an
+      // existing element. Its own timer (950ms) matches phaseWashFade's 900ms
+      // CSS duration — the shorter shared timeout used here previously cut
+      // the wash class well before the animation finished playing.
+      if (next.phase === 'voting' && prev.phase !== 'voting') {
+        hostFX.phaseWash = 'voting';
       }
       if (next.phase === 'elimination' && prev.phase !== 'elimination') {
         sound.eliminate();
+        hostFX.phaseWash = 'elimination';
       }
       if (next.phase === 'gameover' && prev.phase !== 'gameover') {
         sound.win();
         enteredGameOver = true;
+        hostFX.phaseWash = 'gameover';
+      }
+      if (hostFX.phaseWash) {
+        clearTimeout(phaseWashTimer);
+        phaseWashTimer = setTimeout(() => { hostFX.phaseWash = null; }, 950);
       }
       if (prev.phase === 'gameover' && next.phase !== 'gameover') {
         confettiSpawned = false;
       }
     }
 
-    render();
+    renderHost();
 
-    if (hostFX.justClimbed || hostFX.bankPulse) {
-      setTimeout(() => {
-        hostFX.justClimbed = false;
-        hostFX.bankPulse = false;
-      }, 50);
+    if (bankIncreasedFrom !== null) {
+      tweenBankAmount(bankIncreasedFrom, next.bank);
     }
 
     if (enteredGameOver && !confettiSpawned) {
@@ -244,12 +347,12 @@ export async function connectHost(code, controllerKey) {
     } else {
       HOST.connLost = true;
     }
-    render();
+    renderHost();
   });
 
   conn.on('error', () => {
     HOST.connLost = true;
-    render();
+    renderHost();
   });
 }
 
@@ -282,7 +385,8 @@ export function hostRootView() {
   }
 
   const banner = HOST.connLost ? '<div class="banner">Connection lost &mdash; reconnecting&hellip;</div>' : '';
-  return `<div class="host-wrap">${banner}${body}</div>`;
+  const wash = hostFX.phaseWash ? `<div class="phase-wash ${hostFX.phaseWash}"></div>` : '';
+  return `<div class="host-wrap">${wash}${banner}${body}</div>`;
 }
 
 // --- shared bits -----------------------------------------------------------------------------
@@ -322,7 +426,7 @@ function hostLobbyView() {
   const count = s.players.length;
   const body = count
     ? podiumRow(s.players)
-    : '<div class="center-msg">Waiting for players to join&hellip;</div>';
+    : '<div class="center-msg lobby-empty">Waiting for players to join&hellip;</div>';
   return `
     <div class="top-bar">
       <div class="stat-strip">
@@ -386,7 +490,7 @@ function hostPlayingView() {
     <div class="stage">${stageBody}</div>
     ${ladderHtml(s.chainIndex, hostFX.justClimbed)}
     <div class="bank-total${hostFX.bankPulse ? ' pulse' : ''}">
-      <div class="amt">${fmtMoney(s.bank)}</div>
+      <div class="amt js-bank-amount">${fmtMoney(s.bank)}</div>
       <div class="lbl">Team bank</div>
     </div>
   `;
@@ -436,6 +540,23 @@ function hostEliminationView() {
 
 const SHOOTOUT_REGULATION_ROUNDS = 5;
 
+// Which single shootout kick (round index + side) just transitioned from
+// unscored to correct/incorrect, if any — recomputed fresh on every hostState
+// message so it naturally reads as null again once that round is no longer
+// the newest change (no timer needed: this is a direct diff of server data,
+// not a set-and-forget visual flag).
+function freshKickSlot(prevRounds, nextRounds) {
+  for (let i = 0; i < nextRounds.length; i++) {
+    const cur = nextRounds[i];
+    if (!cur) continue;
+    const prevRound = prevRounds[i];
+    if (cur.p0 && (!prevRound || !prevRound.p0)) return { index: i, side: 0 };
+    if (cur.p1 && (!prevRound || !prevRound.p1)) return { index: i, side: 1 };
+  }
+  return null;
+}
+let freshKick = null;
+
 function shootoutKicks(shootout, sideIndex) {
   const rounds = shootout.rounds || [];
   // Regulation is always 5 slots; sudden death keeps appending beyond that —
@@ -450,6 +571,7 @@ function shootoutKicks(shootout, sideIndex) {
     let mark = '';
     if (val === 'correct') { cls += ' hit'; mark = '&#10003;'; }
     else if (val === 'incorrect') { cls += ' miss'; mark = '&#10007;'; }
+    if (freshKick && freshKick.index === i && freshKick.side === sideIndex) cls += ' kick-impact';
     out += `<div class="${cls}">${mark}</div>`;
   }
   return out;

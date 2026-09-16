@@ -33,7 +33,13 @@ export function connectController(code, key) {
   CTRL.conn = conn;
   conn.on('open', () => { CTRL.connLost = false; render(); });
   conn.on('data', (msg) => {
-    if (msg.type === 'controllerState') { CTRL.state = msg.state; CTRL.connLost = false; }
+    if (msg.type === 'controllerState') {
+      const prevRounds = (CTRL.state && CTRL.state.shootout && CTRL.state.shootout.rounds) || [];
+      const nextRounds = (msg.state.shootout && msg.state.shootout.rounds) || [];
+      freshKick = freshKickSlot(prevRounds, nextRounds);
+      CTRL.state = msg.state;
+      CTRL.connLost = false;
+    }
     else if (msg.type === 'roomClosed') {
       CTRL.error = 'The host closed this room.';
       conn.close(); // definitive — stop net.js's auto-reconnect against a room that's now gone
@@ -207,6 +213,26 @@ Actions.__keydown = (e) => {
 
 const SHOOTOUT_REGULATION_ROUNDS = 5;
 
+// Which single shootout kick (round index + side) just transitioned from
+// unscored to correct/incorrect, if any — recomputed fresh on every
+// controllerState message so it naturally reads as null again once that
+// round is no longer the newest change (no timer needed: this is a direct
+// diff of server data, not a set-and-forget visual flag). Without this, the
+// kick-impact pop (host.css/player.css/controller.css) would replay for
+// every already-scored kick on every re-render, since the whole row is
+// rebuilt from scratch on every broadcast.
+function freshKickSlot(prevRounds, nextRounds) {
+  for (let i = 0; i < nextRounds.length; i++) {
+    const cur = nextRounds[i];
+    if (!cur) continue;
+    const prevRound = prevRounds[i];
+    if (cur.p0 && (!prevRound || !prevRound.p0)) return { index: i, side: 0 };
+    if (cur.p1 && (!prevRound || !prevRound.p1)) return { index: i, side: 1 };
+  }
+  return null;
+}
+let freshKick = null;
+
 // The shootout's hit/miss row. Deliberately NOT named `kickBoxes` —
 // components.js already exports a `kickBoxes` for an unrelated purpose (a
 // kickable player list), so this stays local to avoid confusion.
@@ -219,8 +245,9 @@ function shootoutKicksRow(rounds, side) {
   for (let i = 0; i < slotCount; i++) {
     const r = rounds && rounds[i];
     const v = r ? r['p' + side] : null;
-    if (v === 'correct') out += '<div class="kick hit">✓</div>';
-    else if (v === 'incorrect') out += '<div class="kick miss">✗</div>';
+    const impact = freshKick && freshKick.index === i && freshKick.side === side ? ' kick-impact' : '';
+    if (v === 'correct') out += `<div class="kick hit${impact}">✓</div>`;
+    else if (v === 'incorrect') out += `<div class="kick miss${impact}">✗</div>`;
     else out += '<div class="kick"></div>';
   }
   return `<div class="kicks">${out}</div>`;
