@@ -1,0 +1,88 @@
+/* Player (contestant's phone) view — everything shared/generic already
+   lives in base.css (.player-wrap, .p-header, .p-stats, .turn-flag,
+   .center-msg, .spectator-tag, .footer-note, .act-btn, .full-btn, .roster,
+   .chip, .vote-grid, .elim-card, .duel, .gameover, .confetti-*, etc). This
+   file only adds player-specific touches: the room-code input styling,
+   generic form control styling for inputs/selects that live outside
+   .setup-card, a text-link button, and the small interaction polish
+   (bank shimmer, turn-flag pulse, stat-pop bounce). */
+
+.room-code-input {
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  text-align: center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 22px;
+}
+
+/* Inputs/selects rendered inside the player screen (rename box, vote picker)
+   live outside .setup-card, so give them the same look here. */
+.player-wrap input,
+.player-wrap select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+.player-wrap input:focus,
+.player-wrap select:focus {
+  outline: 2px solid var(--blue);
+}
+
+.everyone-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 14px 0 6px;
+}
+
+/* Plain-text "link" action, used for the reconnect prompt inside the
+   connection-lost banner — a real <button> so no href/preventDefault
+   dance is needed for the global data-action click delegate. */
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  font: inherit;
+  color: var(--gold);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Bank button shimmer-on-tap ---------- */
+.act-btn.bank {
+  background-size: 200% 100%;
+}
+.act-btn.bank:active {
+  animation: bankShimmer 0.4s ease;
+}
+@keyframes bankShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* ---------- "Your turn" pulse so it's noticeable without reading ---------- */
+.turn-flag.yours {
+  animation: turnPulse 1.6s ease-in-out infinite;
+}
+@keyframes turnPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 178, 61, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(232, 178, 61, 0); }
+}
+
+/* ---------- Stat-pop bounce when correct/incorrect ticks up ---------- */
+.p-stat b.pop {
+  animation: statPop 0.35s ease;
+}
+@keyframes statPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}

@@ -1,0 +1,41 @@
+/* Public "suggest a question" page — a single calm centered card, sharing
+   the game's gold accent + fonts (base.css) and the tool-form/tool-tabs/
+   tool-btn primitives (tool-base.css) but with none of the gameshow chrome
+   and none of the admin table density. Loaded after base.css + tool-base.css. */
+
+.submit-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 16px;}
+
+.submit-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:30px 28px;max-width:520px;width:100%;text-align:left;}
+
+.submit-title{margin:0 0 6px;font-size:24px;font-weight:600;text-align:center;}
+.submit-sub{margin:0 0 18px;color:var(--muted);font-size:14px;text-align:center;}
+
+/* Permanent moderation-boundary notice — the key signal this is the public
+   suggestion box, not the authenticated admin editor. */
+.submit-notice{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);font-size:12.5px;line-height:1.5;padding:12px 14px;border-radius:10px;margin-bottom:18px;}
+
+.submit-question-input{min-height:70px;}
+
+.submit-hint{font-size:12.5px;color:var(--muted);margin-top:6px;}
+.submit-hint.has-count{color:var(--gold);}
+
+.submit-divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.6px;margin:18px 0 4px;}
+.submit-divider::before,.submit-divider::after{content:'';flex:1;height:1px;background:var(--line);}
+
+.submit-filename{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:12.5px;color:var(--text);}
+.submit-filename button{padding:4px 10px;font-size:11px;}
+
+/* Confirmation state — some visual warmth, distinct from both the gameshow
+   screens and the flat admin table. */
+.submit-done{text-align:center;padding:10px 4px 4px;}
+.submit-check{width:56px;height:56px;line-height:54px;border-radius:50%;background:rgba(63,166,108,0.14);border:1px solid var(--green);color:var(--green);font-size:26px;margin:0 auto 14px;}
+.submit-done h2{margin:0 0 4px;font-size:20px;}
+.submit-count{color:var(--gold);font-size:13px;font-weight:600;margin:0 0 10px;}
+.submit-done p{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 18px;}
+.submit-back{margin-top:14px;text-align:center;}
+.submit-back a{color:var(--muted);font-size:13px;text-decoration:none;border-bottom:1px dotted var(--line);}
+.submit-back a:hover{color:var(--gold);}
+
+@media (max-width:480px){
+  .submit-card{padding:22px 18px;}
+}

@@ -1,0 +1,57 @@
+/* Shared "internal tool / public form" look for admin.html and submit.html —
+   same dark palette and fonts as the game (base.css), but no gameshow chrome
+   (no ladders/podiums/spotlights). Loaded alongside base.css on both pages. */
+
+.tool-shell{max-width:880px;margin:0 auto;width:100%;padding:24px 20px 60px;}
+.tool-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line);}
+.tool-header h1{font-size:22px;margin:0;font-weight:600;}
+.tool-header .sub{color:var(--muted);font-size:13px;margin-top:4px;}
+.tool-nav{display:flex;gap:6px;}
+.tool-nav button{background:var(--panel-2);color:var(--muted);border:1px solid var(--line);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;position:relative;}
+.tool-nav button.active{background:rgba(79,143,247,0.12);border-color:var(--blue);color:var(--blue);}
+.tool-nav button .badge{background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:6px;}
+.tool-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px;}
+.tool-card h2,.tool-card h3{margin:0 0 12px;font-size:15px;font-weight:600;}
+
+.tool-form label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px;}
+.tool-form label:first-child{margin-top:0;}
+.tool-form input,.tool-form select,.tool-form textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;}
+.tool-form input:focus,.tool-form textarea:focus{outline:2px solid var(--blue);}
+.tool-form textarea{min-height:100px;resize:vertical;}
+.tool-btn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;background:var(--panel-2);color:var(--text);border:1px solid var(--line);}
+.tool-btn.primary{background:linear-gradient(180deg,#f3c463,var(--gold));color:#20150a;border:none;}
+.tool-btn.blue{background:var(--blue);color:#06122a;border:none;}
+.tool-btn.danger{background:transparent;color:var(--red);border:1px solid rgba(229,72,77,0.4);}
+.tool-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.tool-btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+
+.tool-table{width:100%;border-collapse:collapse;font-size:13px;}
+.tool-table th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;padding:8px 10px;border-bottom:1px solid var(--line);}
+.tool-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;}
+.tool-table tr:nth-child(even) td{background:rgba(255,255,255,0.015);}
+.tool-table tr:hover td{background:rgba(79,143,247,0.05);}
+.tool-table .q-cell{max-width:360px;}
+.tool-table .a-cell{color:var(--green);}
+.tool-table .muted{color:var(--muted);font-size:11px;}
+.tool-table .row-actions{display:flex;gap:6px;white-space:nowrap;}
+.tool-table .row-actions button{padding:5px 10px;font-size:12px;border-radius:6px;}
+
+.tool-search{display:flex;gap:8px;margin-bottom:14px;}
+.tool-search input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;}
+.tool-search input:focus{outline:2px solid var(--blue);}
+.tool-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:16px;font-size:13px;color:var(--muted);}
+.tool-pagination button{background:var(--panel-2);color:var(--text);border:1px solid var(--line);padding:6px 14px;border-radius:6px;}
+.tool-pagination button:disabled{opacity:0.35;cursor:not-allowed;}
+
+.tool-empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:13px;}
+.tool-error{background:rgba(229,72,77,0.12);border:1px solid var(--red);color:#ffb3b5;padding:12px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;}
+.tool-success{background:rgba(63,166,108,0.12);border:1px solid var(--green);color:#bfe9d0;padding:12px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;}
+
+.tool-tabs{display:flex;gap:6px;margin-bottom:16px;}
+.tool-tabs button{flex:1;background:var(--panel-2);color:var(--muted);border:1px solid var(--line);padding:10px;border-radius:8px;font-size:13px;font-weight:500;}
+.tool-tabs button.active{background:rgba(232,178,61,0.12);border-color:var(--gold-dim);color:var(--gold);}
+
+.tool-batch-divider{font-size:11px;color:var(--muted);padding:10px 0 4px;border-top:1px dashed var(--line);margin-top:10px;}
+
+.tool-login{max-width:340px;margin:80px auto;text-align:center;}
+.tool-login .icon{font-size:34px;margin-bottom:8px;}

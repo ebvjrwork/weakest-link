@@ -1,0 +1,67 @@
+/* Host ("big screen") view — spectator-only display. Layout wrapper is wider
+   than the phone-oriented .main-compact from base.css since this renders on
+   a TV/projector; everything else here reuses base.css classes and only adds
+   the handful of host-specific elements and one-shot polish animations. */
+
+.host-wrap{max-width:1100px;margin:0 auto;width:100%;padding:14px 28px 40px;}
+
+/* huge lobby room code */
+.room-code-display{
+  text-align:center;
+  font-family:'Oswald',sans-serif;
+  font-weight:700;
+  font-size:clamp(64px,14vw,140px);
+  color:var(--gold);
+  letter-spacing:0.15em;
+  line-height:1;
+  margin:18px 0 10px;
+}
+
+/* short status line used above countdowns / voting / etc. */
+.phase-heading{
+  text-align:center;
+  font-family:'Oswald',sans-serif;
+  color:var(--gold);
+  font-size:18px;
+  letter-spacing:0.5px;
+  margin:10px 0 4px;
+}
+
+.elim-note{color:var(--muted);font-size:13px;margin-top:-4px;margin-bottom:10px;}
+
+/* --- one-shot polish animations, triggered from host.js on state deltas --- */
+
+.bank-total.pulse{animation:bankPulse .5s ease;}
+@keyframes bankPulse{
+  0%{transform:scale(1);}
+  30%{transform:scale(1.15);color:#fff;}
+  100%{transform:scale(1);}
+}
+
+.rung-h.just-climbed{animation:rungPop .5s ease;}
+@keyframes rungPop{
+  0%{transform:scale(.7);}
+  60%{transform:scale(1.15);box-shadow:0 0 20px 4px rgba(232,178,61,.5);}
+  100%{transform:scale(1);}
+}
+
+.elim-card .name{animation:elimShake .5s ease;}
+@keyframes elimShake{
+  0%{opacity:0;transform:scale(.5) rotate(-4deg);}
+  60%{opacity:1;transform:scale(1.08) rotate(2deg);}
+  100%{transform:scale(1) rotate(0);}
+}
+
+/* sudden-death pulsing glow around the shootout duel */
+.duel.sudden{border-radius:16px;animation:suddenPulse 1.6s ease-in-out infinite;}
+@keyframes suddenPulse{
+  0%{box-shadow:0 0 0 0 rgba(229,72,77,.55);}
+  70%{box-shadow:0 0 0 22px rgba(229,72,77,0);}
+  100%{box-shadow:0 0 0 0 rgba(229,72,77,0);}
+}
+
+.gameover .trophy{animation:trophyBounce 1.6s ease-in-out infinite;}
+@keyframes trophyBounce{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-14px);}
+}

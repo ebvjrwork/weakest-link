@@ -1,0 +1,21 @@
+/* admin.html-only tweaks. Everything else (page shell, header, nav, cards,
+   forms, buttons, table, search, pagination, empty/error/success states,
+   tabs, login card) comes from tool-base.css — do not duplicate those rules
+   here. */
+
+/* Inline row-edit state on the question-bank table. */
+.tool-table tr.editing td{background:rgba(79,143,247,0.06);}
+
+/* Visual break between the "add a question" mini-form and the search/table
+   below it, inside the same .tool-card. */
+.admin-add-form{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--line);}
+
+/* One row per pending submission inside the moderation list card. */
+.admin-submission{padding:14px 0;border-bottom:1px solid var(--line);}
+.admin-submission:last-child{border-bottom:none;}
+.admin-submission:first-child{padding-top:0;}
+
+/* Small free-standing input (e.g. the optional reject reason) that isn't
+   inside a .tool-form, so it needs its own baseline styling. */
+.admin-inline-input{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;max-width:220px;}
+.admin-inline-input:focus{outline:2px solid var(--blue);}

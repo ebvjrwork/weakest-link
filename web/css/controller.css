@@ -1,0 +1,20 @@
+/* Quizmaster remote-control styles. Almost everything the controller needs
+   (.ctrl-wrap, .panel, .act-btn, .roster, .duel, .qbank-*, etc.) already
+   lives in base.css and is shared with the host/player screens — this file
+   only adds the small, controller-specific polish on top of it. */
+
+/* Keep the room/round status bar pinned while a phone screen full of panels
+   scrolls underneath it (base.css's .top-bar has no position set, so this
+   override is purely additive). */
+.top-bar {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+/* A quick "this is the panel with the answer on it" accent for the quizmaster,
+   since it's the one piece of information only this device ever shows. */
+.ctrl-question-panel {
+  border-left: 3px solid var(--blue);
+}
