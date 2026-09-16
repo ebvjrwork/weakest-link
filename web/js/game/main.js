@@ -8,7 +8,7 @@ import * as sound from '../core/sound.js';
 import {
   role, localView, setLocalView, setPendingJoinCode, HOST, CTRL, P, onRender, Actions, Binds, Changes,
 } from './state.js';
-import { hostSetupView, hostRootView } from './host.js';
+import { hostSetupView, hostRootView, connectHost } from './host.js';
 import { controllerSetupView, controllerRootView, connectController } from './controller.js';
 import { playerSetupView, playerRootView, connectPlayer } from './player.js';
 
@@ -139,6 +139,24 @@ function init() {
   if (sess && sess.roomCode && sess.playerId && sess.playerToken) {
     connectPlayer(sess.roomCode, sess.myName || '', { playerId: sess.playerId, playerToken: sess.playerToken });
     return;
+  }
+  // Same-tab refresh recovery for the big-screen display (mirrors the player
+  // session above) — falls back to the ?host=CODE link below if there's no
+  // session (a fresh tab/device, e.g. after the original tab was closed).
+  const hostSess = session.get('wlink_host_session', null);
+  if (hostSess && hostSess.roomCode) {
+    connectHost(hostSess.roomCode);
+    return;
+  }
+  // Opened from the big screen's own "recovery URL" (or a bookmark of it) —
+  // reconnects the display to an already-running room, no secret needed.
+  const hostCode = getQueryParam('host');
+  if (hostCode) {
+    const clean = hostCode.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+    if (clean) {
+      connectHost(clean);
+      return;
+    }
   }
   // Opened from the "Open quizmaster controller" link on the host's lobby
   // screen — connect straight in, no manual room-code entry needed.

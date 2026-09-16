@@ -5,8 +5,13 @@
 // top of state transitions it notices along the way. No game logic lives
 // here.
 
-import { $, esc, fmtMoney, buildControllerLink } from '../core/dom.js';
-import { createConnection, apiPost, wsURL } from '../core/net.js';
+import {
+  $, esc, fmtMoney, buildControllerLink, buildHostLink,
+} from '../core/dom.js';
+import {
+  createConnection, apiGet, apiPost, wsURL,
+} from '../core/net.js';
+import { session } from '../core/storage.js';
 import * as sound from '../core/sound.js';
 import { parseCSVQuestions, parseCustomQuestions, pairsToObjects } from '../core/questions-parse.js';
 import {
@@ -89,6 +94,8 @@ Actions.retryHost = () => {
   HOST.ready = false;
   HOST.error = null;
   HOST.connLost = false;
+  session.remove('wlink_host_session');
+  try { window.history.replaceState(null, '', window.location.pathname); } catch (e) { /* ignore */ }
   setRole(null);
   setLocalView('hostSetup');
   render();
@@ -128,13 +135,38 @@ Actions.setBankModeCustom = () => { setupUI.bankMode = 'custom'; render(); };
 
 // --- connection --------------------------------------------------------------------------
 
-export function connectHost(code) {
+// A room lives on the server independently of any one browser tab — if the
+// host's display tab/window is closed or crashes, this is what lets them get
+// back to the SAME room instead of only ever being able to create a new one.
+// No secret needed: the host view is read-only and shows nothing a player
+// couldn't already see, so the room code alone is enough.
+export async function connectHost(code) {
   setRole('host');
   HOST.roomCode = code;
   HOST.state = null;
   HOST.error = null;
   HOST.ready = false;
   HOST.connLost = false;
+  render();
+
+  // A stale recovery link/session (room already ended, or the server
+  // restarted) would otherwise retry the WebSocket forever with no clear
+  // signal why — a quick REST pre-flight gives an immediate, honest answer.
+  try {
+    const summary = await apiGet(`/api/rooms/${code}`);
+    if (!summary.exists) {
+      HOST.error = 'This room no longer exists — it may have ended, or the server restarted.';
+      session.remove('wlink_host_session');
+      render();
+      return;
+    }
+  } catch (e) {
+    // Pre-flight itself failed (network hiccup) — fall through and let the
+    // WebSocket attempt speak for itself rather than blocking recovery on it.
+  }
+
+  session.set('wlink_host_session', { roomCode: code });
+  try { window.history.replaceState(null, '', buildHostLink(code)); } catch (e) { /* ignore */ }
 
   const conn = createConnection(wsURL({ role: 'host', code }));
   HOST.conn = conn;
@@ -145,7 +177,14 @@ export function connectHost(code) {
   });
 
   conn.on('data', (msg) => {
-    if (!msg || msg.type !== 'hostState') return;
+    if (!msg) return;
+    if (msg.type === 'roomClosed') {
+      HOST.error = 'This room has been closed.';
+      session.remove('wlink_host_session');
+      render();
+      return;
+    }
+    if (msg.type !== 'hostState') return;
     const prev = HOST.state;
     const next = msg.state;
     HOST.state = next;
@@ -254,6 +293,20 @@ function topBarSimple() {
   `;
 }
 
+// A visible, selectable copy of this screen's own recovery URL — shown so
+// closing/crashing this tab is recoverable even on a kiosk/TV browser where
+// the address bar (which already reflects this same URL) may not be visible
+// at all. Deliberately plain text, not just a link, so it can be read off,
+// photographed, or copied by hand.
+function hostRecoveryNote(code) {
+  return `
+    <div class="host-recovery-note">
+      If this screen closes, reopen it at:<br>
+      <span class="host-recovery-url">${esc(buildHostLink(code))}</span>
+    </div>
+  `;
+}
+
 // --- phase views -----------------------------------------------------------------------------
 
 function hostLobbyView() {
@@ -274,6 +327,7 @@ function hostLobbyView() {
     </div>
     ${body}
     <div class="footer-note">The link above opens the quizmaster's controller in a new tab &mdash; keep it open on your phone or another device to run the game.</div>
+    ${hostRecoveryNote(s.roomCode)}
   `;
 }
 

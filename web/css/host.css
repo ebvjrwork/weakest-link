@@ -17,6 +17,26 @@
   margin:18px 0 10px;
 }
 
+.host-recovery-note{
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.6;
+  margin:6px 0 4px;
+}
+.host-recovery-url{
+  display:inline-block;
+  margin-top:2px;
+  color:var(--text);
+  font-family:monospace;
+  font-size:11px;
+  user-select:all;
+  background:var(--panel-2);
+  padding:3px 8px;
+  border-radius:6px;
+  word-break:break-all;
+}
+
 /* short status line used above countdowns / voting / etc. */
 .phase-heading{
   text-align:center;

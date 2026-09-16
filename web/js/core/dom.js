@@ -61,3 +61,16 @@ export function buildControllerLink(code, key) {
     return `?run=${code}&key=${encodeURIComponent(key)}`;
   }
 }
+
+// Reopens the big-screen display for an already-running room — no secret
+// needed (the host view is read-only and shows nothing a player can't
+// already see). Lets the host recover if the display tab/window gets closed
+// or crashes, without losing the game — the room itself lives on the server
+// independently of any one browser tab.
+export function buildHostLink(code) {
+  try {
+    return window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + '?host=' + code;
+  } catch (e) {
+    return '?host=' + code;
+  }
+}
