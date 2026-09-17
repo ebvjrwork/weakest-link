@@ -10,7 +10,7 @@ import { apiPost, createConnection, wsURL } from '../core/net.js';
 import { session } from '../core/storage.js';
 import * as sound from '../core/sound.js';
 import {
-  P, pendingJoinCode, setRole, setLocalView, render, Actions, Changes,
+  P, pendingJoinCode, setRole, setLocalView, render, Actions, Changes, syncClock,
 } from './state.js';
 import {
   ladderHtml, bigTimerHtml, countdownHtml, standingsHtml, tallyHtml, spawnConfetti,
@@ -91,6 +91,7 @@ function everyoneProgress(players) {
 // ---------------- networking ----------------
 
 function handleMessage(msg) {
+  syncClock(msg.now);
   if (msg.type === 'state') {
     const prevState = P.state;
     const prevPhase = prevState && prevState.phase;
@@ -503,6 +504,10 @@ function playerShootoutView(s, me) {
   const turnPlayer = shootout.order[shootout.currentTurn];
   const myTurn = mine && turnPlayer && turnPlayer.id === s.myId;
   const suddenRound = shootout.currentRoundIndex - SHOOTOUT_REGULATION_ROUNDS + 1;
+  const askedName = turnPlayer ? turnPlayer.name : '';
+  const stageBody = shootout.currentQuestion
+    ? `<div class="q-text">${esc(shootout.currentQuestion.q)}</div>`
+    : `<div class="q-text" style="color:var(--blue)">Up next: ${esc(askedName)}</div>`;
 
   return `
     ${!mine ? `<div class="spectator-tag">You've been voted off — spectating</div>` : ''}
@@ -517,6 +522,7 @@ function playerShootoutView(s, me) {
         <div class="kicks">${shootoutKicks(shootout, 'p1')}</div>
       </div>
     </div>
+    <div class="stage">${stageBody}</div>
     ${mine
       ? `<div class="turn-flag ${myTurn ? 'yours' : 'theirs'}${myTurn && turnPop ? ' enter' : ''}">${myTurn ? "You're up!" : 'Waiting for your turn'}</div>`
       : `<div class="turn-flag theirs">${esc(turnPlayer ? turnPlayer.name : '…')}'s turn</div>${everyoneProgress(s.players)}`}

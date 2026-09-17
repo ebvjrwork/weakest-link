@@ -12,7 +12,7 @@ import { createConnection, wsURL } from '../core/net.js';
 import * as sound from '../core/sound.js';
 import { parseCSVQuestions, parseCustomQuestions, pairsToObjects } from '../core/questions-parse.js';
 import {
-  role, setRole, setLocalView, CTRL, ctrlUI, render, Actions, Binds, Changes,
+  role, setRole, setLocalView, CTRL, ctrlUI, render, Actions, Binds, Changes, syncClock,
 } from './state.js';
 import {
   ladderHtml, bigTimerHtml, controllerRoster, tallyHtml, activityLog, questionBankEditorHtml, standingsHtml,
@@ -33,6 +33,7 @@ export function connectController(code, key) {
   CTRL.conn = conn;
   conn.on('open', () => { CTRL.connLost = false; render(); });
   conn.on('data', (msg) => {
+    syncClock(msg.now);
     if (msg.type === 'controllerState') {
       const prevRounds = (CTRL.state && CTRL.state.shootout && CTRL.state.shootout.rounds) || [];
       const nextRounds = (msg.state.shootout && msg.state.shootout.rounds) || [];

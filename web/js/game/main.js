@@ -6,7 +6,7 @@ import { $, getQueryParam, fmtClock } from '../core/dom.js';
 import { session } from '../core/storage.js';
 import * as sound from '../core/sound.js';
 import {
-  role, localView, setLocalView, setPendingJoinCode, HOST, CTRL, P, onRender, Actions, Binds, Changes,
+  role, localView, setLocalView, setPendingJoinCode, HOST, CTRL, P, onRender, Actions, Binds, Changes, clockNow,
 } from './state.js';
 import { hostSetupView, hostRootView, connectHost } from './host.js';
 import { controllerSetupView, controllerRootView, connectController } from './controller.js';
@@ -165,7 +165,7 @@ function tickLiveTimers() {
     if (s.phase === 'countdown') { cdEndsAt = s.countdownEndsAt; }
   }
 
-  const remaining = running ? endsAt - Date.now() : null;
+  const remaining = running ? endsAt - clockNow() : null;
   const text = running ? fmtClock(remaining) : '--:--';
   const low = running && remaining < 10000;
   document.querySelectorAll('.js-timer').forEach((node) => {
@@ -184,7 +184,7 @@ function tickLiveTimers() {
   }
 
   if (cdEndsAt !== null) {
-    const secsLeft = Math.max(0, Math.ceil((cdEndsAt - Date.now()) / 1000));
+    const secsLeft = Math.max(0, Math.ceil((cdEndsAt - clockNow()) / 1000));
     document.querySelectorAll('.js-countdown').forEach((node) => {
       node.textContent = secsLeft > 0 ? String(secsLeft) : 'GO!';
     });

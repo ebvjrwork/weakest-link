@@ -213,7 +213,7 @@ func (r *Room) handleAttach(req attachRequest) bool {
 		}
 		r.players[p.ID] = req.conn
 		req.result <- AttachResult{OK: true}
-		req.conn.SendJSON(ws.Msg(ws.ServerMsgState, "state", r.state.ToPlayerState(p.ID)))
+		req.conn.SendJSON(ws.Msg(ws.ServerMsgState, "state", r.state.ToPlayerState(p.ID), "now", now))
 		return reconnected
 	case ws.RoleController:
 		// The room code alone is deliberately public (every player needs it to
@@ -226,12 +226,12 @@ func (r *Room) handleAttach(req attachRequest) bool {
 		}
 		r.controllers[req.conn] = struct{}{}
 		req.result <- AttachResult{OK: true}
-		req.conn.SendJSON(ws.Msg(ws.ServerMsgControllerState, "state", r.state.ToControllerState()))
+		req.conn.SendJSON(ws.Msg(ws.ServerMsgControllerState, "state", r.state.ToControllerState(), "now", now))
 		return false
 	case ws.RoleHost:
 		r.hosts[req.conn] = struct{}{}
 		req.result <- AttachResult{OK: true}
-		req.conn.SendJSON(ws.Msg(ws.ServerMsgHostState, "state", r.state.ToPlayerState("")))
+		req.conn.SendJSON(ws.Msg(ws.ServerMsgHostState, "state", r.state.ToPlayerState(""), "now", now))
 		return false
 	}
 	req.result <- AttachResult{OK: false, Reason: "Unknown role."}
@@ -411,19 +411,24 @@ func (r *Room) tick(nowMs int64) bool {
 }
 
 func (r *Room) broadcast() {
+	// "now" rides along on every state push (no extra chatter — these messages
+	// already go out on every change) so clients can correct for their own
+	// clock drift when counting down against the absolute timer/countdown
+	// deadlines below, instead of trusting their local Date.now() outright.
+	now := time.Now().UnixMilli()
 	for id, c := range r.players {
-		c.SendJSON(ws.Msg(ws.ServerMsgState, "state", r.state.ToPlayerState(id)))
+		c.SendJSON(ws.Msg(ws.ServerMsgState, "state", r.state.ToPlayerState(id), "now", now))
 	}
 	if len(r.controllers) > 0 {
 		cs := r.state.ToControllerState()
 		for c := range r.controllers {
-			c.SendJSON(ws.Msg(ws.ServerMsgControllerState, "state", cs))
+			c.SendJSON(ws.Msg(ws.ServerMsgControllerState, "state", cs, "now", now))
 		}
 	}
 	if len(r.hosts) > 0 {
 		hs := r.state.ToPlayerState("")
 		for c := range r.hosts {
-			c.SendJSON(ws.Msg(ws.ServerMsgHostState, "state", hs))
+			c.SendJSON(ws.Msg(ws.ServerMsgHostState, "state", hs, "now", now))
 		}
 	}
 }

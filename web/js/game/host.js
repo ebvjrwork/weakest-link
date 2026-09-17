@@ -15,7 +15,7 @@ import { session } from '../core/storage.js';
 import * as sound from '../core/sound.js';
 import { parseCSVQuestions, parseCustomQuestions, pairsToObjects } from '../core/questions-parse.js';
 import {
-  HOST, setRole, setLocalView, render, Actions, Binds, Changes, setupUI,
+  HOST, setRole, setLocalView, render, Actions, Binds, Changes, setupUI, syncClock,
 } from './state.js';
 import {
   ladderHtml, bigTimerHtml, countdownHtml, podiumRow, standingsHtml, tallyHtml,
@@ -267,6 +267,7 @@ export async function connectHost(code, controllerKey) {
 
   conn.on('data', (msg) => {
     if (!msg) return;
+    syncClock(msg.now);
     if (msg.type === 'roomClosed') {
       HOST.error = 'This room has been closed.';
       session.remove('wlink_host_session');

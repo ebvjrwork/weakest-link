@@ -49,6 +49,19 @@ let renderListeners = [];
 export function onRender(fn) { renderListeners.push(fn); }
 export function render() { renderListeners.forEach((fn) => fn()); }
 
+// The server sends absolute epoch-ms timer/countdown deadlines and expects
+// each client to count down against its own Date.now() (see CLAUDE.md's
+// "zero server chatter" ticking-clock design) — that only stays accurate if
+// the client's wall clock agrees with the server's. Every state message
+// piggybacks the server's current time (no extra network chatter), and we
+// track the client/server delta so tickLiveTimers can correct for drift
+// instead of trusting the client clock outright.
+let clockOffsetMs = 0;
+export function syncClock(serverNow) {
+  if (typeof serverNow === 'number') clockOffsetMs = Date.now() - serverNow;
+}
+export function clockNow() { return Date.now() - clockOffsetMs; }
+
 export const Actions = {};
 
 // Registries for the global delegated 'input'/'change' listeners (main.js),
